@@ -1,5 +1,5 @@
 {
-	"compatibility_date": "2025-10-08",
+	"compatibility_date": "2025-11-17",
 	"main": "src/server/index.ts",
 	"name": "durable-chat-template",
 	"migrations": [
@@ -27,5 +27,5 @@
 	"observability": {
 		"enabled": true
 	},
-	"upload_source_maps": true
+	"upload_source_maps": false
 }
