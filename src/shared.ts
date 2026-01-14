@@ -3,6 +3,8 @@ export type ChatMessage = {
 	content: string;
 	user: string;
 	role: "user" | "assistant";
+	/** optional client/server timestamp (ms since epoch) */
+	ts?: number;
 };
 
 export type Message =
@@ -12,6 +14,7 @@ export type Message =
 			content: string;
 			user: string;
 			role: "user" | "assistant";
+			ts?: number;
 	  }
 	| {
 			type: "update";
@@ -19,6 +22,7 @@ export type Message =
 			content: string;
 			user: string;
 			role: "user" | "assistant";
+			ts?: number;
 	  }
 	| {
 			type: "all";

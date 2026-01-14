@@ -1,6 +1,6 @@
+import React, { useEffect, useMemo, useRef, startTransition, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { usePartySocket } from "partysocket/react";
-import React, { useState } from "react";
 import {
 	BrowserRouter,
 	Routes,
@@ -13,9 +13,24 @@ import { nanoid } from "nanoid";
 import { names, type ChatMessage, type Message } from "../shared";
 
 function App() {
-	const [name] = useState(names[Math.floor(Math.random() * names.length)]);
+	const name = useMemo(() => names[Math.floor(Math.random() * names.length)], []);
+	const avatarColors = ["#34D399","#60A5FA","#A78BFA","#F472B6","#F59E0B","#F87171","#FBBF24"];
+	const colorFor = (u: string) => avatarColors[u.charCodeAt(0) % avatarColors.length];
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
+	const inputRef = useRef<HTMLInputElement | null>(null);
+	const containerRef = useRef<HTMLDivElement | null>(null);
+	const [input, setInput] = useState("");
+	const [isSending, setIsSending] = useState(false);
 	const { room } = useParams();
+
+	useEffect(() => {
+		inputRef.current?.focus();
+	}, [room]);
+
+	useEffect(() => {
+		// Auto-scroll to the newest message
+		containerRef.current?.lastElementChild?.scrollIntoView({ behavior: "smooth", block: "end" });
+	}, [messages]);
 
 	const socket = usePartySocket({
 		party: "chat",
@@ -23,96 +38,114 @@ function App() {
 		onMessage: (evt) => {
 			const message = JSON.parse(evt.data as string) as Message;
 			if (message.type === "add") {
-				const foundIndex = messages.findIndex((m) => m.id === message.id);
-				if (foundIndex === -1) {
-					// probably someone else who added a message
-					setMessages((messages) => [
-						...messages,
-						{
-							id: message.id,
-							content: message.content,
-							user: message.user,
-							role: message.role,
-						},
-					]);
-				} else {
-					// this usually means we ourselves added a message
-					// and it was broadcasted back
-					// so let's replace the message with the new message
-					setMessages((messages) => {
-						return messages
-							.slice(0, foundIndex)
-							.concat({
+				setMessages((prev) => {
+					const foundIndex = prev.findIndex((m) => m.id === message.id);
+					const newMsg = {
+						id: message.id,
+						content: message.content,
+						user: message.user,
+						role: message.role,
+						ts: message.ts ?? Date.now(),
+					};
+					if (foundIndex === -1) return [...prev, newMsg];
+					return prev.slice(0, foundIndex).concat(newMsg).concat(prev.slice(foundIndex + 1));
+				});
+			} else if (message.type === "update") {
+				setMessages((prev) =>
+					prev.map((m) =>
+						m.id === message.id
+							? {
 								id: message.id,
 								content: message.content,
 								user: message.user,
 								role: message.role,
-							})
-							.concat(messages.slice(foundIndex + 1));
-					});
-				}
-			} else if (message.type === "update") {
-				setMessages((messages) =>
-					messages.map((m) =>
-						m.id === message.id
-							? {
-									id: message.id,
-									content: message.content,
-									user: message.user,
-									role: message.role,
-								}
-							: m,
+								ts: message.ts ?? Date.now(),
+							}
+						: m,
 					),
 				);
 			} else {
-				setMessages(message.messages);
+				setMessages(message.messages.map((m) => ({ ...m, ts: m.ts ?? Date.now() })));
 			}
 		},
 	});
 
 	return (
-		<div className="chat container">
-			{messages.map((message) => (
-				<div key={message.id} className="row message">
-					<div className="two columns user">{message.user}</div>
-					<div className="ten columns">{message.content}</div>
-				</div>
-			))}
+		<div className="chat-wrap">
+			<header className="chat-header">
+			<div className="header-left">
+					<div className="header-meta">
+						<div className="header-title">Chat</div>
+						<div className="header-sub">{room}</div>						</div>
+					</div>
+				</header>
+			<main className="messages" id="messages" ref={containerRef} role="list">
+				{messages.map((message, i) => {
+					const prev = messages[i - 1];
+					const isContinuation = !!prev && prev.user === message.user;
+					return (
+						<div key={message.id} className={`message ${message.user === name ? "mine" : ""} ${isContinuation ? "grouped" : ""}`} role="listitem">
+						<div className="bubble">
+							<div className="meta">
+								{!isContinuation && <span className="meta-name">{message.user}</span>}
+								<span className="meta-time">{new Date(message.ts ?? Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+							</div>
+							<div className="content">{message.content}</div>
+						</div>
+						</div>
+					);
+				})}
+			</main>
+
 			<form
-				className="row"
+				className="composer"
 				onSubmit={(e) => {
 					e.preventDefault();
-					const content = e.currentTarget.elements.namedItem(
-						"content",
-					) as HTMLInputElement;
+					const content = input.trim();
+					if (!content) return;
 					const chatMessage: ChatMessage = {
+						ts: Date.now(),
 						id: nanoid(8),
-						content: content.value,
+						content,
 						user: name,
 						role: "user",
 					};
-					setMessages((messages) => [...messages, chatMessage]);
-					// we could broadcast the message here
-
+					// Use a non-urgent update to keep the UI responsive
+					startTransition(() => {
+						setMessages((prev) => [...prev, chatMessage]);
+					});
 					socket.send(
 						JSON.stringify({
 							type: "add",
 							...chatMessage,
 						} satisfies Message),
 					);
-
-					content.value = "";
+					// micro send animation
+				setIsSending(true);
+				setTimeout(() => setIsSending(false), 380);
+				setInput("");
+					inputRef.current?.focus();
 				}}
 			>
 				<input
+					ref={inputRef}
+					value={input}
+					onChange={(e) => setInput(e.target.value)}
 					type="text"
 					name="content"
-					className="ten columns my-input-text"
-					placeholder={`Hello ${name}! Type a message...`}
+					className="input"
+					placeholder={`Message as ${name}`}
 					autoComplete="off"
 				/>
-				<button type="submit" className="send-message two columns">
-					Send
+				<button
+					type="submit"
+					className={`btn ${input.trim() ? "active" : "disabled"}`}
+					aria-label="Send message"
+					disabled={!input.trim()}
+				>
+					<svg className={`icon-plane ${isSending ? "sending" : ""}`} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+						<path fill="currentColor" d="M2 21l21-9L2 3v7l15 2-15 2v7z" />
+					</svg>
 				</button>
 			</form>
 		</div>
@@ -121,11 +154,13 @@ function App() {
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 createRoot(document.getElementById("root")!).render(
-	<BrowserRouter>
-		<Routes>
-			<Route path="/" element={<Navigate to={`/${nanoid()}`} />} />
-			<Route path="/:room" element={<App />} />
-			<Route path="*" element={<Navigate to="/" />} />
-		</Routes>
-	</BrowserRouter>,
+	<React.StrictMode>
+		<BrowserRouter>
+			<Routes>
+				<Route path="/" element={<Navigate to={`/${nanoid()}`} />} />
+				<Route path="/:room" element={<App />} />
+				<Route path="*" element={<Navigate to="/" />} />
+			</Routes>
+		</BrowserRouter>
+	</React.StrictMode>,
 );

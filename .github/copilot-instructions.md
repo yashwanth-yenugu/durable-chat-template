@@ -12,18 +12,13 @@ Key points for editing and generating code here:
   - Client UI: `src/client/index.tsx`. Client connects to a party with `usePartySocket({ party: 'chat', room })`.
   - Shared types and message formats: `src/shared.ts`.
 
-- Build & dev
-  - Build client: `npm run build` uses esbuild via `wrangler build` (see `wrangler.json` build command). The repo exposes scripts: `npm run cf-typegen`, `npm run check`, `npm run deploy`, `npm run dev`.
-  - Run locally: `npm run dev` launches `wrangler dev` to run the Worker with Assets mounted.
-  - Deploy: `npm run deploy` -> `wrangler deploy`.
-
 - Conventions & patterns
   - Messages are shuttle objects described in `src/shared.ts` (type `Message`) and are serialized via JSON over WebSocket.
   - Server uses SQL storage helpers in Durable Objects (see `this.ctx.storage.sql.exec(...)`) and uses `ON CONFLICT` upserts for messages.
   - The server broadcasts raw incoming WebSocket messages to all connections; it *also* persists messages when receiving `add` or `update` message types.
 
 - Testing and Type Safety
-  - TypeScript projects are split into `src/client` and `src/server` with their own `tsconfig.json`. Use `npm run check` to run both projects' type checks plus a Wrangler dry-run deploy.
+  - TypeScript projects are split into `src/client` and `src/server` with their own `tsconfig.json`. Use `bun run check` to run both projects' type checks plus a Wrangler dry-run deploy.
 
 - Common tasks for the agent
   - When adding features that change message shapes, update `src/shared.ts` first and then update both client and server.
