@@ -312,6 +312,11 @@ body, html {
 	background: rgba(229, 62, 62, 0.08);
 }
 
+/* Touch devices (mobile) have no hover — keep the button always visible */
+@media (pointer: coarse) {
+	.delete-btn { opacity: 1; }
+}
+
 /* ── Online badge ────────────────────────────────────── */
 .online-badge {
 	display: flex;
