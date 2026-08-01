@@ -100,9 +100,10 @@ export class Chat extends Server<Env> {
 
 	saveMessage(message: ChatMessage) {
 		const ts = message.ts ?? Date.now();
-		this.ctx.storage.sql.exec(
+		const result = this.ctx.storage.sql.exec(
 			`INSERT INTO messages (id, user, role, content, ts) VALUES (?, ?, ?, ?, ?)
-			 ON CONFLICT (id) DO UPDATE SET content = ?, ts = ?`,
+			 ON CONFLICT (id) DO UPDATE SET content = ?, ts = ?
+			 WHERE messages.user = ?`,
 			message.id,
 			message.user,
 			message.role,
@@ -110,6 +111,7 @@ export class Chat extends Server<Env> {
 			ts,
 			message.content,
 			ts,
+			message.user,
 		);
 		// Keep only the most recent MAX_MESSAGES entries
 		this.ctx.storage.sql.exec(
@@ -118,6 +120,7 @@ export class Chat extends Server<Env> {
 			)`,
 			MAX_MESSAGES,
 		);
+		return result.rowsWritten > 0;
 	}
 
 	onMessage(connection: Connection, message: WSMessage) {
@@ -154,7 +157,7 @@ export class Chat extends Server<Env> {
 				content: msg.content,
 				ts: msg.ts ?? Date.now(),
 			};
-			this.saveMessage(chatMsg);
+			if (!this.saveMessage(chatMsg)) return;
 			// Broadcast with normalised ts so all clients agree on the timestamp
 			this.broadcast(
 				JSON.stringify({ ...msg, ts: chatMsg.ts }),
@@ -165,11 +168,12 @@ export class Chat extends Server<Env> {
 
 		if (msg.type === "delete") {
 			// Only delete if the message belongs to the requesting user
-			this.ctx.storage.sql.exec(
+			const result = this.ctx.storage.sql.exec(
 				`DELETE FROM messages WHERE id = ? AND user = ?`,
 				msg.id,
 				msg.user,
 			);
+			if (result.rowsWritten === 0) return;
 			this.broadcast(JSON.stringify(msg), [connection.id]);
 		}
 	}
