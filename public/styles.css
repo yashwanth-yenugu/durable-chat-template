@@ -250,11 +250,135 @@ body, html {
 @media (max-width: 620px) {
 	.messages { padding: 56px 16px 58px; }
 	.avatar { width: 36px; height: 36px; }
-	.bubble { max-width: 80%; }
+	.bubble { max-width: 86%; }
 	.title { font-size: 1.125rem; }
+	.input { font-size: 16px; } /* prevent iOS auto-zoom */
 }
 
-/* Remove avatars: hide avatar elements for DM-like UI */
-.header-avatar, .avatar { display: none !important; }
-/* keep message spacing tighter since avatars aren't shown */
-.messages { gap: 8px; }
+/* ── Avatar ──────────────────────────────────────────── */
+.header-avatar {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+	font-size: 0.82rem;
+	color: white;
+	flex-shrink: 0;
+}
+
+.avatar {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+	font-size: 0.78rem;
+	color: white;
+	flex-shrink: 0;
+	align-self: flex-end;
+}
+
+.avatar.hidden { visibility: hidden; }
+
+/* ── Bubble (add relative for delete button) ─────────── */
+.bubble { position: relative; }
+
+/* ── Delete button ───────────────────────────────────── */
+.delete-btn {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 0.68rem;
+	color: rgba(0, 0, 0, 0.25);
+	padding: 2px 5px;
+	border-radius: 4px;
+	opacity: 0;
+	transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+	line-height: 1;
+}
+
+.bubble:hover .delete-btn { opacity: 1; }
+.delete-btn:hover {
+	color: #e53e3e;
+	background: rgba(229, 62, 62, 0.08);
+}
+
+/* ── Online badge ────────────────────────────────────── */
+.online-badge {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	font-size: 0.78rem;
+	color: rgba(255, 255, 255, 0.95);
+	background: rgba(255, 255, 255, 0.12);
+	padding: 3px 9px;
+	border-radius: 999px;
+	white-space: nowrap;
+}
+
+.online-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: #4ade80;
+	flex-shrink: 0;
+}
+
+/* ── Typing indicator ────────────────────────────────── */
+.typing-indicator {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 2px 4px;
+	color: var(--muted);
+	font-size: 0.82rem;
+	min-height: 28px;
+}
+
+.typing-dots {
+	display: inline-flex;
+	gap: 3px;
+	align-items: center;
+}
+
+.typing-dots span {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--muted);
+	animation: typing-blink 1.4s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing-blink {
+	0%, 80%, 100% { opacity: 0.25; transform: scale(0.85); }
+	40%            { opacity: 1;    transform: scale(1);    }
+}
+
+/* ── Empty state ─────────────────────────────────────── */
+.empty-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+	gap: 10px;
+	padding: 80px 24px;
+	color: var(--muted);
+	text-align: center;
+	user-select: none;
+}
+
+.empty-icon  { font-size: 2.8rem; line-height: 1; }
+.empty-title { font-size: 1.05rem; font-weight: 600; color: #4a5568; }
+.empty-sub   { font-size: 0.88rem; }
