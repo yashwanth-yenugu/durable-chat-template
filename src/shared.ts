@@ -3,9 +3,15 @@ export type ChatMessage = {
 	content: string;
 	user: string;
 	role: "user" | "assistant";
-	/** optional client/server timestamp (ms since epoch) */
+	/** client/server timestamp (ms since epoch) */
 	ts?: number;
 };
+
+/** Maximum number of characters allowed in a single message */
+export const MAX_MESSAGE_LENGTH = 4000;
+
+/** Maximum number of messages stored per room */
+export const MAX_MESSAGES = 200;
 
 export type Message =
 	| {
@@ -24,10 +30,11 @@ export type Message =
 			role: "user" | "assistant";
 			ts?: number;
 	  }
-	| {
-			type: "all";
-			messages: ChatMessage[];
-	  };
+	| { type: "delete"; id: string; user: string }
+	| { type: "typing"; user: string }
+	| { type: "join"; user: string }
+	| { type: "presence"; users: string[] }
+	| { type: "all"; messages: ChatMessage[] };
 
 export const names = [
 	// Women cricketers
