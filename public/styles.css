@@ -312,10 +312,11 @@ body, html {
 	background: rgba(229, 62, 62, 0.08);
 }
 
-/* Touch devices (mobile) have no hover — keep the button always visible with a larger tap target */
-@media (pointer: coarse) {
+/* Touch/mobile devices cannot hover — keep the button always visible with a larger tap target */
+@media (hover: none) {
 	.delete-btn {
 		opacity: 1;
+		color: rgba(0, 0, 0, 0.5);
 		padding: 10px 12px;
 		top: 0;
 		right: 0;
