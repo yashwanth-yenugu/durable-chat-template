@@ -312,9 +312,19 @@ body, html {
 	background: rgba(229, 62, 62, 0.08);
 }
 
-/* Touch devices (mobile) have no hover — keep the button always visible */
+/* Touch devices (mobile) have no hover — keep the button always visible with a larger tap target */
 @media (pointer: coarse) {
-	.delete-btn { opacity: 1; }
+	.delete-btn {
+		opacity: 1;
+		padding: 10px 12px;
+		top: 0;
+		right: 0;
+		min-width: 44px;
+		min-height: 44px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
 }
 
 /* ── Online badge ────────────────────────────────────── */
