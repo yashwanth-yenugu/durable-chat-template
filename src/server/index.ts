@@ -153,9 +153,12 @@ export class Chat extends Server<Env> {
 		}
 
 		if (msg.type === "add" || msg.type === "update") {
+			const connectionUser = this.connectedUsers.get(connection.id);
+			if (!connectionUser || connectionUser !== msg.user) return;
+
 			const chatMsg: ChatMessage = {
 				id: msg.id,
-				user: msg.user,
+				user: connectionUser,
 				role: msg.role,
 				content: msg.content,
 				ts: msg.ts ?? Date.now(),
@@ -163,21 +166,27 @@ export class Chat extends Server<Env> {
 			if (!this.saveMessage(chatMsg)) return;
 			// Broadcast with normalised ts so all clients agree on the timestamp
 			this.broadcast(
-				JSON.stringify({ ...msg, ts: chatMsg.ts }),
+				JSON.stringify({ ...msg, user: connectionUser, ts: chatMsg.ts }),
 				[connection.id],
 			);
 			return;
 		}
 
 		if (msg.type === "delete") {
+			const connectionUser = this.connectedUsers.get(connection.id);
+			if (!connectionUser || connectionUser !== msg.user) return;
+
 			// Only delete if the message belongs to the requesting user
 			const result = this.ctx.storage.sql.exec(
 				`DELETE FROM messages WHERE id = ? AND user = ?`,
 				msg.id,
-				msg.user,
+				connectionUser,
 			);
 			if (result.rowsWritten === 0) return;
-			this.broadcast(JSON.stringify(msg), [connection.id]);
+			this.broadcast(
+				JSON.stringify({ ...msg, user: connectionUser }),
+				[connection.id],
+			);
 		}
 	}
 
