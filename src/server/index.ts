@@ -50,9 +50,6 @@ function validate(raw: unknown): Message | null {
 export class Chat extends Server<Env> {
 	static options = { hibernate: true };
 
-	/** In-memory presence map: connectionId → username (best-effort, lost on hibernation) */
-	connectedUsers = new Map<string, string>();
-
 	onStart() {
 		// Create the messages table with timestamp support
 		this.ctx.storage.sql.exec(
@@ -89,16 +86,28 @@ export class Chat extends Server<Env> {
 		_reason: string,
 		_wasClean: boolean,
 	) {
-		this.connectedUsers.delete(connection.id);
 		this.broadcastPresence([connection.id]);
 	}
 
+	/** Derive the online user list from live connection state (hibernation-safe). */
 	broadcastPresence(exclude?: string[]) {
-		const users = [...new Set(this.connectedUsers.values())];
+		const users = [...new Set(
+			[...this.getConnections<{ user: string }>()]
+				.map((c) => c.state?.user)
+				.filter((u): u is string => typeof u === "string" && u.length > 0),
+		)];
 		this.broadcast(
 			JSON.stringify({ type: "presence", users } satisfies Message),
 			exclude,
 		);
+	}
+
+	/** Return the authenticated username for a connection, or null. */
+	private connectionUser(connection: Connection): string | null {
+		const state = (connection as Connection<{ user: string }>).state;
+		return typeof state?.user === "string" && state.user.length > 0
+			? state.user
+			: null;
 	}
 
 	saveMessage(message: ChatMessage) {
@@ -141,7 +150,8 @@ export class Chat extends Server<Env> {
 		this.ctx.storage.setAlarm(Date.now() + ROOM_TTL_MS);
 
 		if (msg.type === "join") {
-			this.connectedUsers.set(connection.id, msg.user);
+			// Persist the username in the connection's hibernation-safe state
+			(connection as Connection<{ user: string }>).setState({ user: msg.user });
 			this.broadcastPresence();
 			return;
 		}
@@ -153,7 +163,7 @@ export class Chat extends Server<Env> {
 		}
 
 		if (msg.type === "add" || msg.type === "update") {
-			const connectionUser = this.connectedUsers.get(connection.id);
+			const connectionUser = this.connectionUser(connection);
 			if (!connectionUser || connectionUser !== msg.user) return;
 
 			const chatMsg: ChatMessage = {
@@ -173,7 +183,7 @@ export class Chat extends Server<Env> {
 		}
 
 		if (msg.type === "delete") {
-			const connectionUser = this.connectedUsers.get(connection.id);
+			const connectionUser = this.connectionUser(connection);
 			if (!connectionUser || connectionUser !== msg.user) return;
 
 			// Only delete if the message belongs to the requesting user
