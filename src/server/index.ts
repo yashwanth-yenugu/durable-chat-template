@@ -17,6 +17,8 @@ function validate(raw: unknown): Message | null {
 	const m = raw as Record<string, unknown>;
 	const str = (v: unknown, max: number) =>
 		typeof v === "string" && v.length > 0 && v.length <= max;
+	const validTs = (v: unknown) =>
+		v === undefined || (typeof v === "number" && Number.isFinite(v) && v > 0);
 
 	switch (m.type) {
 		case "add":
@@ -25,7 +27,8 @@ function validate(raw: unknown): Message | null {
 				!str(m.id, 64) ||
 				!str(m.content, MAX_MESSAGE_LENGTH) ||
 				!str(m.user, 64) ||
-				(m.role !== "user" && m.role !== "assistant")
+				(m.role !== "user" && m.role !== "assistant") ||
+				!validTs(m.ts)
 			)
 				return null;
 			return m as unknown as Message;

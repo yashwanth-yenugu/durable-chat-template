@@ -305,7 +305,8 @@ body, html {
 	line-height: 1;
 }
 
-.bubble:hover .delete-btn { opacity: 1; }
+.bubble:hover .delete-btn,
+.bubble:focus-within .delete-btn { opacity: 1; }
 .delete-btn:hover {
 	color: #e53e3e;
 	background: rgba(229, 62, 62, 0.08);

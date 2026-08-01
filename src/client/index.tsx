@@ -17,7 +17,12 @@ import {
 } from "react-router";
 import { nanoid } from "nanoid";
 
-import { names, type ChatMessage, type Message } from "../shared";
+import {
+	MAX_MESSAGE_LENGTH,
+	names,
+	type ChatMessage,
+	type Message,
+} from "../shared";
 
 const AVATAR_COLORS = [
 	"#34D399", "#60A5FA", "#A78BFA",
@@ -255,7 +260,7 @@ function App() {
 				onSubmit={(e) => {
 					e.preventDefault();
 					const content = input.trim();
-					if (!content) return;
+					if (!content || content.length > MAX_MESSAGE_LENGTH) return;
 					const chatMessage: ChatMessage = {
 						ts: Date.now(),
 						id: nanoid(8),
@@ -289,13 +294,14 @@ function App() {
 					name="content"
 					className="input"
 					placeholder={`Message as ${name}`}
+					maxLength={MAX_MESSAGE_LENGTH}
 					autoComplete="off"
 				/>
 				<button
 					type="submit"
-					className={`btn ${input.trim() ? "active" : "disabled"}`}
+					className={`btn ${input.trim() && input.trim().length <= MAX_MESSAGE_LENGTH ? "active" : "disabled"}`}
 					aria-label="Send message"
-					disabled={!input.trim()}
+					disabled={!input.trim() || input.trim().length > MAX_MESSAGE_LENGTH}
 				>
 					<svg
 						className={`icon-plane ${isSending ? "sending" : ""}`}
