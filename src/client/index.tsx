@@ -45,9 +45,19 @@ function getOrCreateName(): string {
 }
 
 /** Extract the first http/https URL from a string, or null. */
+/** Return the URL only when its scheme is http or https; otherwise return null. */
+function safeHttpUrl(raw: string): string | null {
+	try {
+		const { protocol } = new URL(raw);
+		return protocol === "http:" || protocol === "https:" ? raw : null;
+	} catch {
+		return null;
+	}
+}
+
 function extractFirstUrl(text: string): string | null {
 	const m = text.match(/https?:\/\/[^\s<>"{}|\\^`[\]]+/);
-	return m ? m[0] : null;
+	return m ? safeHttpUrl(m[0]) : null;
 }
 
 /** Replace bare URLs in text with clickable <a> elements. */
@@ -58,16 +68,21 @@ function MessageContent({ content }: { content: string }) {
 	let m: RegExpExecArray | null;
 	while ((m = urlRe.exec(content)) !== null) {
 		if (m.index > last) nodes.push(content.slice(last, m.index));
+		const safe = safeHttpUrl(m[0]);
 		nodes.push(
-			<a
-				key={m.index}
-				href={m[0]}
-				target="_blank"
-				rel="noopener noreferrer"
-				className="msg-link"
-			>
-				{m[0]}
-			</a>,
+			safe ? (
+				<a
+					key={m.index}
+					href={safe}
+					target="_blank"
+					rel="noopener noreferrer"
+					className="msg-link"
+				>
+					{m[0]}
+				</a>
+			) : (
+				m[0]
+			),
 		);
 		last = m.index + m[0].length;
 	}
@@ -97,9 +112,16 @@ function UrlPreview({ url }: { url: string }) {
 
 	if (!data) return null;
 
+	// Double-check the canonical URL from the server response is safe before rendering
+	const safeUrl = safeHttpUrl(data.url ?? url);
+	if (!safeUrl) return null;
+
+	let hostname = "";
+	try { hostname = new URL(safeUrl).hostname; } catch {}
+
 	return (
 		<a
-			href={url}
+			href={safeUrl}
 			target="_blank"
 			rel="noopener noreferrer"
 			className="url-preview"
@@ -112,7 +134,7 @@ function UrlPreview({ url }: { url: string }) {
 				{data.description && (
 					<div className="url-preview-desc">{data.description}</div>
 				)}
-				<div className="url-preview-host">{new URL(url).hostname}</div>
+				<div className="url-preview-host">{hostname}</div>
 			</div>
 		</a>
 	);
