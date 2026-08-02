@@ -42,6 +42,16 @@ function validate(raw: unknown): Message | null {
 			if (!str(m.user, 64)) return null;
 			return m as unknown as Message;
 
+		case "seen":
+			if (
+				!str(m.user, 64) ||
+				typeof m.ts !== "number" ||
+				!Number.isFinite(m.ts) ||
+				m.ts <= 0
+			)
+				return null;
+			return m as unknown as Message;
+
 		default:
 			return null;
 	}
@@ -53,7 +63,7 @@ export class Chat extends Server<Env> {
 	onStart() {
 		// Create the messages table with timestamp support
 		this.ctx.storage.sql.exec(
-			`CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, user TEXT, role TEXT, content TEXT, ts INTEGER DEFAULT 0)`,
+			`CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, user TEXT, role TEXT, content TEXT, ts INTEGER DEFAULT 0, edited INTEGER DEFAULT 0)`,
 		);
 		// Migrate existing tables that were created without the ts column
 		try {
@@ -63,18 +73,49 @@ export class Chat extends Server<Env> {
 		} catch {
 			// Column already exists — safe to ignore
 		}
+		// Migrate: add edited column if missing
+		try {
+			this.ctx.storage.sql.exec(
+				`ALTER TABLE messages ADD COLUMN edited INTEGER DEFAULT 0`,
+			);
+		} catch {
+			// Column already exists — safe to ignore
+		}
+		// Per-user read receipt: stores the timestamp of the last seen message
+		this.ctx.storage.sql.exec(
+			`CREATE TABLE IF NOT EXISTS seen_receipts (user TEXT PRIMARY KEY, ts INTEGER DEFAULT 0)`,
+		);
 	}
 
 	onConnect(connection: Connection) {
 		// Send full message history to the newly connected client
-		const messages = this.ctx.storage.sql
+		type MsgRow = { id: string; user: string; role: string; content: string; ts: number; edited: number };
+		const rows = this.ctx.storage.sql
 			.exec(
-				`SELECT id, user, role, content, ts FROM messages ORDER BY ts ASC LIMIT ?`,
+				`SELECT id, user, role, content, ts, edited FROM messages ORDER BY ts ASC LIMIT ?`,
 				MAX_MESSAGES,
 			)
-			.toArray() as ChatMessage[];
+			.toArray() as MsgRow[];
 
-		connection.send(JSON.stringify({ type: "all", messages } satisfies Message));
+		// Normalise the `edited` field to a boolean for the client
+		const messages: ChatMessage[] = rows.map((m) => ({
+			id: m.id,
+			user: m.user,
+			role: m.role as "user" | "assistant",
+			content: m.content,
+			ts: m.ts,
+			edited: m.edited === 1,
+		}));
+
+		connection.send(
+			JSON.stringify({ type: "all", messages } satisfies Message),
+		);
+
+		// Send current read-receipt state
+		const receipts = this.loadReceipts();
+		connection.send(
+			JSON.stringify({ type: "seen_update", receipts } satisfies Message),
+		);
 
 		// Reset room expiry alarm on any connection
 		this.ctx.storage.setAlarm(Date.now() + ROOM_TTL_MS);
@@ -91,11 +132,13 @@ export class Chat extends Server<Env> {
 
 	/** Derive the online user list from live connection state (hibernation-safe). */
 	broadcastPresence(exclude?: string[]) {
-		const users = [...new Set(
-			[...this.getConnections<{ user: string }>()]
-				.map((c) => c.state?.user)
-				.filter((u): u is string => typeof u === "string" && u.length > 0),
-		)];
+		const users = [
+			...new Set(
+				[...this.getConnections<{ user: string }>()]
+					.map((c) => c.state?.user)
+					.filter((u): u is string => typeof u === "string" && u.length > 0),
+			),
+		];
 		this.broadcast(
 			JSON.stringify({ type: "presence", users } satisfies Message),
 			exclude,
@@ -110,11 +153,22 @@ export class Chat extends Server<Env> {
 			: null;
 	}
 
-	saveMessage(message: ChatMessage) {
+	/** Load all read receipts as a plain record. */
+	private loadReceipts(): Record<string, number> {
+		const rows = this.ctx.storage.sql
+			.exec(`SELECT user, ts FROM seen_receipts`)
+			.toArray() as { user: string; ts: number }[];
+		const receipts: Record<string, number> = {};
+		for (const row of rows) receipts[row.user] = row.ts;
+		return receipts;
+	}
+
+	saveMessage(message: ChatMessage, isEdit = false) {
 		const ts = message.ts ?? Date.now();
+		const editedFlag = isEdit ? 1 : 0;
 		const result = this.ctx.storage.sql.exec(
-			`INSERT INTO messages (id, user, role, content, ts) VALUES (?, ?, ?, ?, ?)
-			 ON CONFLICT (id) DO UPDATE SET content = ?, ts = ?
+			`INSERT INTO messages (id, user, role, content, ts, edited) VALUES (?, ?, ?, ?, ?, 0)
+			 ON CONFLICT (id) DO UPDATE SET content = ?, ts = ?, edited = ?
 			 WHERE messages.user = ?`,
 			message.id,
 			message.user,
@@ -123,6 +177,7 @@ export class Chat extends Server<Env> {
 			ts,
 			message.content,
 			ts,
+			editedFlag,
 			message.user,
 		);
 		// Keep only the most recent MAX_MESSAGES entries
@@ -162,10 +217,30 @@ export class Chat extends Server<Env> {
 			return;
 		}
 
+		if (msg.type === "seen") {
+			const connectionUser = this.connectionUser(connection);
+			if (!connectionUser || connectionUser !== msg.user) return;
+
+			this.ctx.storage.sql.exec(
+				`INSERT INTO seen_receipts (user, ts) VALUES (?, ?)
+				 ON CONFLICT (user) DO UPDATE SET ts = MAX(ts, ?)`,
+				connectionUser,
+				msg.ts,
+				msg.ts,
+			);
+
+			const receipts = this.loadReceipts();
+			this.broadcast(
+				JSON.stringify({ type: "seen_update", receipts } satisfies Message),
+			);
+			return;
+		}
+
 		if (msg.type === "add" || msg.type === "update") {
 			const connectionUser = this.connectionUser(connection);
 			if (!connectionUser || connectionUser !== msg.user) return;
 
+			const isEdit = msg.type === "update";
 			const chatMsg: ChatMessage = {
 				id: msg.id,
 				user: connectionUser,
@@ -173,10 +248,15 @@ export class Chat extends Server<Env> {
 				content: msg.content,
 				ts: msg.ts ?? Date.now(),
 			};
-			if (!this.saveMessage(chatMsg)) return;
+			if (!this.saveMessage(chatMsg, isEdit)) return;
 			// Broadcast with normalised ts so all clients agree on the timestamp
 			this.broadcast(
-				JSON.stringify({ ...msg, user: connectionUser, ts: chatMsg.ts }),
+				JSON.stringify({
+					...msg,
+					user: connectionUser,
+					ts: chatMsg.ts,
+					edited: isEdit,
+				}),
 				[connection.id],
 			);
 			return;
@@ -206,8 +286,74 @@ export class Chat extends Server<Env> {
 	}
 }
 
+/** Extract OG / meta tags from an HTML string */
+function extractMeta(
+	html: string,
+	targetUrl: string,
+): { title: string | null; description: string | null; image: string | null } {
+	const attr = (tag: string, prop: string) => {
+		const re = new RegExp(
+			`<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"']*)["']`,
+			"i",
+		);
+		const re2 = new RegExp(
+			`<meta[^>]+content=["']([^"']*)["'][^>]+(?:property|name)=["']${prop}["']`,
+			"i",
+		);
+		const m = tag.match(re) ?? tag.match(re2);
+		return m ? m[1] : null;
+	};
+	const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+	return {
+		title: attr(html, "og:title") ?? (titleMatch ? titleMatch[1].trim() : null),
+		description: attr(html, "og:description") ?? attr(html, "description"),
+		image: attr(html, "og:image"),
+	};
+}
+
 export default {
 	async fetch(request, env) {
+		const url = new URL(request.url);
+
+		// Proxy endpoint: fetch URL metadata for link unfurl previews
+		if (url.pathname === "/api/unfurl") {
+			const targetRaw = url.searchParams.get("url") ?? "";
+			let target: URL;
+			try {
+				target = new URL(targetRaw);
+			} catch {
+				return new Response("Invalid URL", { status: 400 });
+			}
+			if (target.protocol !== "http:" && target.protocol !== "https:") {
+				return new Response("Scheme not allowed", { status: 400 });
+			}
+			// Block private / loopback addresses
+			const h = target.hostname.toLowerCase();
+			if (
+				h === "localhost" ||
+				h.endsWith(".local") ||
+				/^127\./.test(h) ||
+				/^10\./.test(h) ||
+				/^192\.168\./.test(h) ||
+				/^172\.(1[6-9]|2\d|3[01])\./.test(h)
+			) {
+				return new Response("Blocked", { status: 403 });
+			}
+			try {
+				const res = await fetch(target.toString(), {
+					headers: { "User-Agent": "Mozilla/5.0 (compatible; ChatBot/1.0)" },
+					redirect: "follow",
+					// biome-ignore lint/suspicious/noExplicitAny: CF-specific option
+					...(({ cf: { scrapeShield: false } }) as any),
+				});
+				const html = await res.text();
+				const meta = extractMeta(html, target.toString());
+				return Response.json({ ...meta, url: target.toString() });
+			} catch {
+				return new Response("Fetch failed", { status: 502 });
+			}
+		}
+
 		return (
 			(await routePartykitRequest(request, { ...env })) ||
 			env.ASSETS.fetch(request)

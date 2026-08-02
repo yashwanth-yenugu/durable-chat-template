@@ -5,6 +5,8 @@ export type ChatMessage = {
 	role: "user" | "assistant";
 	/** client/server timestamp (ms since epoch) */
 	ts?: number;
+	/** true when the message has been edited after initial send */
+	edited?: boolean;
 };
 
 /** Maximum number of characters allowed in a single message */
@@ -34,7 +36,11 @@ export type Message =
 	| { type: "typing"; user: string }
 	| { type: "join"; user: string }
 	| { type: "presence"; users: string[] }
-	| { type: "all"; messages: ChatMessage[] };
+	| { type: "all"; messages: ChatMessage[] }
+	/** Client → server: mark all messages up to `ts` as seen */
+	| { type: "seen"; user: string; ts: number }
+	/** Server → clients: full map of user → last-seen timestamp */
+	| { type: "seen_update"; receipts: Record<string, number> };
 
 export const names = [
 	// Women cricketers
