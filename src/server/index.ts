@@ -287,6 +287,32 @@ export class Chat extends Server<Env> {
 	}
 }
 
+/** Return true if the hostname should be blocked for SSRF protection */
+function isBlockedHostname(h: string): boolean {
+	return (
+		h === "localhost" ||
+		h.endsWith(".local") ||
+		// IPv6 loopback
+		h === "::1" ||
+		// IPv6 link-local (fe80::/10)
+		/^fe[89ab][0-9a-f]:/i.test(h) ||
+		// IPv6 ULA (fc00::/7)
+		/^f[cd][0-9a-f]{2}:/i.test(h) ||
+		// IPv4 loopback 127.0.0.0/8
+		/^127\./.test(h) ||
+		// IPv4 this-network 0.0.0.0/8
+		/^0\./.test(h) ||
+		// RFC 1918 private ranges
+		/^10\./.test(h) ||
+		/^192\.168\./.test(h) ||
+		/^172\.(1[6-9]|2\d|3[01])\./.test(h) ||
+		// Link-local 169.254.0.0/16
+		/^169\.254\./.test(h) ||
+		// CGNAT / shared address space 100.64.0.0/10
+		/^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(h)
+	);
+}
+
 /** Extract OG / meta tags from an HTML string */
 function extractMeta(
 	html: string,
@@ -338,29 +364,7 @@ export default {
 				return new Response("Scheme not allowed", { status: 400 });
 			}
 			// Block private / loopback / non-routable addresses (IPv4 and IPv6)
-			const h = target.hostname.toLowerCase();
-			if (
-				h === "localhost" ||
-				h.endsWith(".local") ||
-				// IPv6 loopback
-				h === "::1" ||
-				// IPv6 link-local (fe80::/10)
-				/^fe[89ab][0-9a-f]:/i.test(h) ||
-				// IPv6 ULA (fc00::/7)
-				/^f[cd][0-9a-f]{2}:/i.test(h) ||
-				// IPv4 loopback 127.0.0.0/8
-				/^127\./.test(h) ||
-				// IPv4 this-network 0.0.0.0/8
-				/^0\./.test(h) ||
-				// RFC 1918 private ranges
-				/^10\./.test(h) ||
-				/^192\.168\./.test(h) ||
-				/^172\.(1[6-9]|2\d|3[01])\./.test(h) ||
-				// Link-local 169.254.0.0/16
-				/^169\.254\./.test(h) ||
-				// CGNAT / shared address space 100.64.0.0/10
-				/^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(h)
-			) {
+			if (isBlockedHostname(target.hostname.toLowerCase())) {
 				return new Response("Blocked", { status: 403 });
 			}
 			try {
@@ -370,7 +374,58 @@ export default {
 					// biome-ignore lint/suspicious/noExplicitAny: CF-specific option
 					...(({ cf: { scrapeShield: false } }) as any),
 				});
-				const html = await res.text();
+				// Re-validate the final URL after redirects to block redirect-based SSRF
+				if (res.url) {
+					try {
+						const finalUrl = new URL(res.url);
+						if (
+							(finalUrl.protocol !== "http:" && finalUrl.protocol !== "https:") ||
+							isBlockedHostname(finalUrl.hostname.toLowerCase())
+						) {
+							return new Response("Blocked", { status: 403 });
+						}
+					} catch {
+						return new Response("Fetch failed", { status: 502 });
+					}
+				}
+				// Status guard: only process successful HTML responses
+				if (res.status !== 200) {
+					return new Response("Fetch failed", { status: 502 });
+				}
+				const ct = res.headers.get("content-type") ?? "";
+				if (!ct.includes("text/html")) {
+					return new Response("Unsupported content type", { status: 422 });
+				}
+				// Size guard: read at most 512 KB to limit resource usage
+				const MAX_HTML_BYTES = 512 * 1024;
+				const reader = res.body?.getReader();
+				if (!reader) {
+					return new Response("Fetch failed", { status: 502 });
+				}
+				const parts: Uint8Array[] = [];
+				let totalBytes = 0;
+				try {
+					while (totalBytes < MAX_HTML_BYTES) {
+						const { done, value } = await reader.read();
+						if (done) break;
+						if (value) {
+							const remaining = MAX_HTML_BYTES - totalBytes;
+							const chunk =
+								value.byteLength <= remaining ? value : value.slice(0, remaining);
+							parts.push(chunk);
+							totalBytes += chunk.byteLength;
+						}
+					}
+				} finally {
+					reader.cancel().catch(() => undefined);
+				}
+				const buf = new Uint8Array(totalBytes);
+				let offset = 0;
+				for (const part of parts) {
+					buf.set(part, offset);
+					offset += part.byteLength;
+				}
+				const html = new TextDecoder().decode(buf);
 				const meta = extractMeta(html, target.toString());
 				return Response.json({ ...meta, url: target.toString() });
 			} catch {
