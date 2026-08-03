@@ -44,7 +44,6 @@ function getOrCreateName(): string {
 	return random;
 }
 
-/** Extract the first http/https URL from a string, or null. */
 /** Return the URL only when its scheme is http or https; otherwise return null. */
 function safeHttpUrl(raw: string): string | null {
 	try {
@@ -177,6 +176,13 @@ function App() {
 
 	useEffect(() => {
 		inputRef.current?.focus();
+		// Reset all per-room state so the first history load is not miscounted
+		prevMsgCountRef.current = 0;
+		lastSeenTsRef.current = 0;
+		setMessages([]);
+		setUnreadCount(0);
+		setReceipts({});
+		setIsAtBottom(true);
 	}, [room]);
 
 	// Scroll tracking

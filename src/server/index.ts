@@ -167,7 +167,7 @@ export class Chat extends Server<Env> {
 		const ts = message.ts ?? Date.now();
 		const editedFlag = isEdit ? 1 : 0;
 		const result = this.ctx.storage.sql.exec(
-			`INSERT INTO messages (id, user, role, content, ts, edited) VALUES (?, ?, ?, ?, ?, 0)
+			`INSERT INTO messages (id, user, role, content, ts, edited) VALUES (?, ?, ?, ?, ?, ?)
 			 ON CONFLICT (id) DO UPDATE SET content = ?, ts = ?, edited = ?
 			 WHERE messages.user = ?`,
 			message.id,
@@ -175,6 +175,7 @@ export class Chat extends Server<Env> {
 			message.role,
 			message.content,
 			ts,
+			editedFlag,
 			message.content,
 			ts,
 			editedFlag,
@@ -304,10 +305,19 @@ function extractMeta(
 		return m ? m[1] : null;
 	};
 	const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+	const rawImage = attr(html, "og:image");
+	let image: string | null = null;
+	if (rawImage) {
+		try {
+			image = new URL(rawImage, targetUrl).href;
+		} catch {
+			image = null;
+		}
+	}
 	return {
 		title: attr(html, "og:title") ?? (titleMatch ? titleMatch[1].trim() : null),
 		description: attr(html, "og:description") ?? attr(html, "description"),
-		image: attr(html, "og:image"),
+		image,
 	};
 }
 
@@ -327,15 +337,29 @@ export default {
 			if (target.protocol !== "http:" && target.protocol !== "https:") {
 				return new Response("Scheme not allowed", { status: 400 });
 			}
-			// Block private / loopback addresses
+			// Block private / loopback / non-routable addresses (IPv4 and IPv6)
 			const h = target.hostname.toLowerCase();
 			if (
 				h === "localhost" ||
 				h.endsWith(".local") ||
+				// IPv6 loopback
+				h === "::1" ||
+				// IPv6 link-local (fe80::/10)
+				/^fe[89ab][0-9a-f]:/i.test(h) ||
+				// IPv6 ULA (fc00::/7)
+				/^f[cd][0-9a-f]{2}:/i.test(h) ||
+				// IPv4 loopback 127.0.0.0/8
 				/^127\./.test(h) ||
+				// IPv4 this-network 0.0.0.0/8
+				/^0\./.test(h) ||
+				// RFC 1918 private ranges
 				/^10\./.test(h) ||
 				/^192\.168\./.test(h) ||
-				/^172\.(1[6-9]|2\d|3[01])\./.test(h)
+				/^172\.(1[6-9]|2\d|3[01])\./.test(h) ||
+				// Link-local 169.254.0.0/16
+				/^169\.254\./.test(h) ||
+				// CGNAT / shared address space 100.64.0.0/10
+				/^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(h)
 			) {
 				return new Response("Blocked", { status: 403 });
 			}
