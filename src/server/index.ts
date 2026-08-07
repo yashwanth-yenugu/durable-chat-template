@@ -289,27 +289,29 @@ export class Chat extends Server<Env> {
 
 /** Return true if the hostname should be blocked for SSRF protection */
 function isBlockedHostname(h: string): boolean {
+	const ipv4Mapped = h.match(/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i);
+	const normalizedHost = ipv4Mapped ? ipv4Mapped[1] : h;
 	return (
-		h === "localhost" ||
-		h.endsWith(".local") ||
+		normalizedHost === "localhost" ||
+		normalizedHost.endsWith(".local") ||
 		// IPv6 loopback
-		h === "::1" ||
+		normalizedHost === "::1" ||
 		// IPv6 link-local (fe80::/10)
-		/^fe[89ab][0-9a-f]:/i.test(h) ||
+		/^fe[89ab][0-9a-f]:/i.test(normalizedHost) ||
 		// IPv6 ULA (fc00::/7)
-		/^f[cd][0-9a-f]{2}:/i.test(h) ||
+		/^f[cd][0-9a-f]{2}:/i.test(normalizedHost) ||
 		// IPv4 loopback 127.0.0.0/8
-		/^127\./.test(h) ||
+		/^127\./.test(normalizedHost) ||
 		// IPv4 this-network 0.0.0.0/8
-		/^0\./.test(h) ||
+		/^0\./.test(normalizedHost) ||
 		// RFC 1918 private ranges
-		/^10\./.test(h) ||
-		/^192\.168\./.test(h) ||
-		/^172\.(1[6-9]|2\d|3[01])\./.test(h) ||
+		/^10\./.test(normalizedHost) ||
+		/^192\.168\./.test(normalizedHost) ||
+		/^172\.(1[6-9]|2\d|3[01])\./.test(normalizedHost) ||
 		// Link-local 169.254.0.0/16
-		/^169\.254\./.test(h) ||
+		/^169\.254\./.test(normalizedHost) ||
 		// CGNAT / shared address space 100.64.0.0/10
-		/^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(h)
+		/^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(normalizedHost)
 	);
 }
 
