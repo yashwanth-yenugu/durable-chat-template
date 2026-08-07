@@ -290,9 +290,12 @@ export class Chat extends Server<Env> {
 /** Return true if the hostname should be blocked for SSRF protection */
 function isBlockedHostname(h: string): boolean {
 	const ipv4Mapped = h.match(/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i);
-	const normalizedHost = ipv4Mapped ? ipv4Mapped[1] : h;
+	// Strip trailing dot (e.g. "localhost." -> "localhost")
+	const stripped = (ipv4Mapped ? ipv4Mapped[1] : h).replace(/\.$/, "");
+	const normalizedHost = stripped;
 	return (
 		normalizedHost === "localhost" ||
+		normalizedHost.endsWith(".localhost") ||
 		normalizedHost.endsWith(".local") ||
 		// IPv6 loopback
 		normalizedHost === "::1" ||
