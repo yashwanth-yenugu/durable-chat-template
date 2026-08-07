@@ -373,24 +373,54 @@ export default {
 				return new Response("Blocked", { status: 403 });
 			}
 			try {
-				const res = await fetch(target.toString(), {
-					headers: { "User-Agent": "Mozilla/5.0 (compatible; ChatBot/1.0)" },
-					redirect: "follow",
+				// Follow redirects manually so we can validate every hop's hostname.
+				// String-only checks on the original URL can be bypassed via DNS
+				// rebinding or wildcard-DNS services (e.g. nip.io, xip.io).
+				let currentUrl = target.toString();
+				let res!: Response;
+				const MAX_REDIRECTS = 10;
+				for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
 					// biome-ignore lint/suspicious/noExplicitAny: CF-specific option
-					...(({ cf: { scrapeShield: false } }) as any),
-				});
-				// Re-validate the final URL after redirects to block redirect-based SSRF
-				if (res.url) {
-					try {
-						const finalUrl = new URL(res.url);
-						if (
-							(finalUrl.protocol !== "http:" && finalUrl.protocol !== "https:") ||
-							isBlockedHostname(finalUrl.hostname.toLowerCase())
-						) {
+					res = await (fetch as any)(currentUrl, {
+						headers: { "User-Agent": "Mozilla/5.0 (compatible; ChatBot/1.0)" },
+						redirect: "manual",
+						cf: { scrapeShield: false },
+					});
+					if (res.status >= 300 && res.status < 400) {
+						const location = res.headers.get("location");
+						if (!location) {
+							return new Response("Fetch failed", { status: 502 });
+						}
+						let nextUrl: URL;
+						try {
+							nextUrl = new URL(location, currentUrl);
+						} catch {
+							return new Response("Fetch failed", { status: 502 });
+						}
+						if (nextUrl.protocol !== "http:" && nextUrl.protocol !== "https:") {
+							return new Response("Scheme not allowed", { status: 400 });
+						}
+						if (isBlockedHostname(nextUrl.hostname.toLowerCase())) {
 							return new Response("Blocked", { status: 403 });
 						}
+						currentUrl = nextUrl.toString();
+						continue;
+					}
+					break;
+				}
+				// Guarded: final URL after all redirects
+				{
+					let finalUrl: URL;
+					try {
+						finalUrl = new URL(res.url || currentUrl);
 					} catch {
 						return new Response("Fetch failed", { status: 502 });
+					}
+					if (
+						(finalUrl.protocol !== "http:" && finalUrl.protocol !== "https:") ||
+						isBlockedHostname(finalUrl.hostname.toLowerCase())
+					) {
+						return new Response("Blocked", { status: 403 });
 					}
 				}
 				// Status guard: only process successful HTML responses
