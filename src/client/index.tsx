@@ -22,7 +22,13 @@ import {
 	names,
 	type ChatMessage,
 	type Message,
+	type SystemMessage,
 } from "../shared";
+
+type DisplayMessage = ChatMessage | SystemMessage;
+
+const isSystemMessage = (m: DisplayMessage): m is SystemMessage => "type" in m && m.type === "system";
+const isChatMessage = (m: DisplayMessage): m is ChatMessage => !isSystemMessage(m);
 
 const AVATAR_COLORS = [
 	"#34D399", "#60A5FA", "#A78BFA",
@@ -44,13 +50,39 @@ function getOrCreateName(): string {
 	return random;
 }
 
+function playNotificationSound() {
+	try {
+		const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+		const now = ctx.currentTime;
+
+		const playTone = (freq: number, startTime: number, duration: number) => {
+			const osc = ctx.createOscillator();
+			const gain = ctx.createGain();
+			osc.type = "sine";
+			osc.frequency.value = freq;
+			gain.gain.setValueAtTime(0.15, startTime);
+			gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+			osc.connect(gain);
+			gain.connect(ctx.destination);
+			osc.start(startTime);
+			osc.stop(startTime + duration);
+		};
+
+		playTone(880, now, 0.12);
+		playTone(1100, now + 0.12, 0.12);
+	} catch {
+		// Ignore audio errors
+	}
+}
+
 function App() {
 	const [name] = useState(getOrCreateName);
-	const [messages, setMessages] = useState<ChatMessage[]>([]);
+	const [messages, setMessages] = useState<DisplayMessage[]>([]);
 	const [typingUsers, setTypingUsers] = useState<string[]>([]);
 	const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
 	const [input, setInput] = useState("");
 	const [isSending, setIsSending] = useState(false);
+	const [unreadCount, setUnreadCount] = useState(0);
 	const inputRef = useRef<HTMLInputElement | null>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const typingTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -76,6 +108,18 @@ function App() {
 		};
 	}, []);
 
+	// Visibility change: clear unread badge when tab becomes visible
+	useEffect(() => {
+		const handleVisibility = () => {
+			if (document.visibilityState === "visible") {
+				setUnreadCount(0);
+				document.title = "Chat!";
+			}
+		};
+		document.addEventListener("visibilitychange", handleVisibility);
+		return () => document.removeEventListener("visibilitychange", handleVisibility);
+	}, []);
+
 	const socket = usePartySocket({
 		party: "chat",
 		room,
@@ -87,15 +131,15 @@ function App() {
 			const message = JSON.parse(evt.data as string) as Message;
 
 			if (message.type === "add" || message.type === "update") {
+				const newMsg: ChatMessage = {
+					id: message.id,
+					content: message.content,
+					user: message.user,
+					role: message.role,
+					ts: message.ts ?? Date.now(),
+				};
 				setMessages((prev) => {
 					const foundIndex = prev.findIndex((m) => m.id === message.id);
-					const newMsg: ChatMessage = {
-						id: message.id,
-						content: message.content,
-						user: message.user,
-						role: message.role,
-						ts: message.ts ?? Date.now(),
-					};
 					if (foundIndex === -1) return [...prev, newMsg];
 					return prev
 						.slice(0, foundIndex)
@@ -122,9 +166,43 @@ function App() {
 				setMessages(
 					message.messages.map((m) => ({ ...m, ts: m.ts || Date.now() })),
 				);
+			} else if (message.type === "system") {
+				const sysMsg: SystemMessage = {
+					type: "system",
+					id: message.id,
+					content: message.content,
+					ts: message.ts ?? Date.now(),
+				};
+				setMessages((prev) => [...prev, sysMsg]);
 			}
 		},
 	});
+
+	// Detect new chat messages from others while tab is hidden and trigger sound/badge
+	useEffect(() => {
+		if (document.visibilityState !== "hidden") return;
+
+		let previousLength = messages.length;
+		const timer = setInterval(() => {
+			if (messages.length > previousLength) {
+				const newItems = messages.slice(previousLength);
+				const hasExternalChat = newItems.some(
+					(m) => isChatMessage(m) && m.user !== name,
+				);
+				if (hasExternalChat) {
+					setUnreadCount((prev) => {
+						const next = prev + 1;
+						document.title = `(${next}) Chat!`;
+						return next;
+					});
+					playNotificationSound();
+				}
+				previousLength = messages.length;
+			}
+		}, 500);
+
+		return () => clearInterval(timer);
+	}, [messages, name]);
 
 	/** Send a typing notification, debounced to once every 2 s */
 	const sendTyping = useCallback(() => {
@@ -195,54 +273,66 @@ function App() {
 						</div>
 					</div>
 				)}
-				{messages.map((message, i) => {
-					const prev = messages[i - 1];
-					const isMine = message.user === name;
-					const isContinuation = !!prev && prev.user === message.user;
+			{messages.map((message, i) => {
+				if (isSystemMessage(message)) {
 					return (
 						<div
 							key={message.id}
-							className={`message ${isMine ? "mine" : ""} ${isContinuation ? "grouped" : ""}`}
+							className="system-message"
 							role="listitem"
 						>
-							<div
-								className={`avatar ${isMine ? "mine" : ""} ${isContinuation ? "hidden" : ""}`}
-								style={
-									isContinuation
-										? undefined
-										: { background: colorFor(message.user) }
-								}
-								aria-hidden="true"
-							>
-								{!isContinuation && initials(message.user)}
-							</div>
-							<div className="bubble">
-								<div className="meta">
-									{!isContinuation && (
-										<span className="meta-name">{message.user}</span>
-									)}
-									<span className="meta-time">
-										{new Date(message.ts ?? Date.now()).toLocaleTimeString([], {
-											hour: "2-digit",
-											minute: "2-digit",
-										})}
-									</span>
-								</div>
-								<div className="content">{message.content}</div>
-								{isMine && (
-									<button
-										className="delete-btn"
-										onClick={() => handleDelete(message.id)}
-										aria-label="Delete message"
-										title="Delete"
-									>
-										✕
-									</button>
-								)}
-							</div>
+							{message.content}
 						</div>
 					);
-				})}
+				}
+
+				const prev = messages[i - 1];
+				const isMine = message.user === name;
+				const isContinuation = !!prev && isChatMessage(prev) && prev.user === message.user;
+				return (
+					<div
+						key={message.id}
+						className={`message ${isMine ? "mine" : ""} ${isContinuation ? "grouped" : ""}`}
+						role="listitem"
+					>
+						<div
+							className={`avatar ${isMine ? "mine" : ""} ${isContinuation ? "hidden" : ""}`}
+							style={
+								isContinuation
+									? undefined
+									: { background: colorFor(message.user) }
+							}
+							aria-hidden="true"
+						>
+							{!isContinuation && initials(message.user)}
+						</div>
+						<div className="bubble">
+							<div className="meta">
+								{!isContinuation && (
+									<span className="meta-name">{message.user}</span>
+								)}
+								<span className="meta-time">
+									{new Date(message.ts ?? Date.now()).toLocaleTimeString([], {
+										hour: "2-digit",
+										minute: "2-digit",
+									})}
+								</span>
+							</div>
+							<div className="content">{message.content}</div>
+							{isMine && (
+								<button
+									className="delete-btn"
+									onClick={() => handleDelete(message.id)}
+									aria-label="Delete message"
+									title="Delete"
+								>
+									✕
+								</button>
+							)}
+						</div>
+					</div>
+				);
+			})}
 				{typingLabel && (
 					<div className="typing-indicator" aria-live="polite">
 						<span className="typing-dots">

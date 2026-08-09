@@ -1,3 +1,10 @@
+export type SystemMessage = {
+	type: "system";
+	id: string;
+	content: string;
+	ts: number;
+};
+
 export type ChatMessage = {
 	id: string;
 	content: string;
@@ -34,7 +41,8 @@ export type Message =
 	| { type: "typing"; user: string }
 	| { type: "join"; user: string }
 	| { type: "presence"; users: string[] }
-	| { type: "all"; messages: ChatMessage[] };
+	| { type: "all"; messages: ChatMessage[] }
+	| SystemMessage;
 
 export const names = [
 	// Women cricketers

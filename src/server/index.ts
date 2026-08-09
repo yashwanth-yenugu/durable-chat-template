@@ -5,11 +5,14 @@ import {
 	routePartykitRequest,
 } from "partyserver";
 
-import type { ChatMessage, Message } from "../shared";
+import type { ChatMessage, Message, SystemMessage } from "../shared";
 import { MAX_MESSAGE_LENGTH, MAX_MESSAGES } from "../shared";
 
 /** Rooms are deleted after 30 days of inactivity */
 const ROOM_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+/** Warn when room expiry is within this window */
+const ROOM_TTL_WARNING_MS = 24 * 60 * 60 * 1000;
 
 /** Validate and parse an incoming WebSocket message; returns null if invalid */
 function validate(raw: unknown): Message | null {
@@ -42,6 +45,10 @@ function validate(raw: unknown): Message | null {
 			if (!str(m.user, 64)) return null;
 			return m as unknown as Message;
 
+		case "system":
+			if (!str(m.content, 200) || !validTs(m.ts)) return null;
+			return m as unknown as SystemMessage;
+
 		default:
 			return null;
 	}
@@ -63,6 +70,13 @@ export class Chat extends Server<Env> {
 		} catch {
 			// Column already exists — safe to ignore
 		}
+
+		// Create room metadata table for TTL tracking
+		this.ctx.storage.sql.exec(
+			`CREATE TABLE IF NOT EXISTS room_meta (key TEXT PRIMARY KEY, value TEXT)`,
+		);
+
+		this.updateRoomExpiry();
 	}
 
 	onConnect(connection: Connection) {
@@ -78,6 +92,9 @@ export class Chat extends Server<Env> {
 
 		// Reset room expiry alarm on any connection
 		this.ctx.storage.setAlarm(Date.now() + ROOM_TTL_MS);
+
+		this.updateRoomExpiry();
+		this.maybeWarnTtl();
 	}
 
 	onClose(
@@ -86,7 +103,60 @@ export class Chat extends Server<Env> {
 		_reason: string,
 		_wasClean: boolean,
 	) {
+		const user = this.connectionUser(connection);
+		if (user) {
+			this.broadcast(
+				JSON.stringify({
+					type: "system",
+					id: `system-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+					content: `${user} left the chat`,
+					ts: Date.now(),
+				} satisfies Message),
+			);
+		}
 		this.broadcastPresence([connection.id]);
+	}
+
+	/** Update the room expiry timestamp and reset the alarm */
+	updateRoomExpiry() {
+		const expiry = Date.now() + ROOM_TTL_MS;
+		this.ctx.storage.sql.exec(
+			`INSERT OR REPLACE INTO room_meta (key, value) VALUES ('room_expiry', ?)`,
+			String(expiry),
+		);
+		this.ctx.storage.sql.exec(
+			`INSERT OR REPLACE INTO room_meta (key, value) VALUES ('ttl_warning_sent', '0')`,
+		);
+		this.ctx.storage.setAlarm(expiry);
+	}
+
+	/** Broadcast a TTL warning if the room is nearing expiry and we haven't warned yet */
+	maybeWarnTtl() {
+		const rows = this.ctx.storage.sql
+			.exec(`SELECT value FROM room_meta WHERE key = ?`, "room_expiry")
+			.toArray() as { value: string }[];
+		const warningRows = this.ctx.storage.sql
+			.exec(`SELECT value FROM room_meta WHERE key = ?`, "ttl_warning_sent")
+			.toArray() as { value: string }[];
+
+		if (rows.length === 0) return;
+
+		const expiry = Number(rows[0].value);
+		const warningSent = warningRows.length > 0 && warningRows[0].value === "1";
+
+		if (!warningSent && expiry - Date.now() < ROOM_TTL_WARNING_MS) {
+			this.broadcast(
+				JSON.stringify({
+					type: "system",
+					id: `system-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+					content: `This room will be deleted in 1 day due to inactivity`,
+					ts: Date.now(),
+				} satisfies Message),
+			);
+			this.ctx.storage.sql.exec(
+				`INSERT OR REPLACE INTO room_meta (key, value) VALUES ('ttl_warning_sent', '1')`,
+			);
+		}
 	}
 
 	/** Derive the online user list from live connection state (hibernation-safe). */
@@ -148,10 +218,20 @@ export class Chat extends Server<Env> {
 
 		// Reset TTL on any activity
 		this.ctx.storage.setAlarm(Date.now() + ROOM_TTL_MS);
+		this.updateRoomExpiry();
 
 		if (msg.type === "join") {
 			// Persist the username in the connection's hibernation-safe state
 			(connection as Connection<{ user: string }>).setState({ user: msg.user });
+			this.broadcast(
+				JSON.stringify({
+					type: "system",
+					id: `system-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+					content: `${msg.user} joined the chat`,
+					ts: Date.now(),
+				} satisfies Message),
+				[connection.id],
+			);
 			this.broadcastPresence();
 			return;
 		}
