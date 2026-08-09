@@ -50,6 +50,9 @@ function getOrCreateName(): string {
 	return random;
 }
 
+// Shared AudioContext ref so playNotificationSound can access it
+const audioContextRef = { current: null as AudioContext | null };
+
 function playNotificationSound() {
 	try {
 		const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -67,14 +70,14 @@ function playNotificationSound() {
 		const now = ctx.currentTime;
 
 		const playTone = (freq: number, startTime: number, duration: number) => {
-			const osc = ctx!.createOscillator();
-			const gain = ctx!.createGain();
+			const osc = ctx.createOscillator();
+			const gain = ctx.createGain();
 			osc.type = "sine";
 			osc.frequency.value = freq;
 			gain.gain.setValueAtTime(0.15, startTime);
 			gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
 			osc.connect(gain);
-			gain.connect(ctx!.destination);
+			gain.connect(ctx.destination);
 			osc.start(startTime);
 			osc.stop(startTime + duration);
 		};
@@ -102,8 +105,6 @@ function App() {
 
 	// Track external message count to detect new arrivals
 	const previousExternalCountRef = useRef(0);
-	// Reuse a single AudioContext across notifications
-	const audioContextRef = useRef<AudioContext | null>(null);
 
 	// Resume AudioContext on first user interaction (browsers block autoplay)
 	useEffect(() => {
@@ -194,11 +195,17 @@ function App() {
 			} else if (message.type === "presence") {
 				setOnlineUsers(message.users);
 			} else if (message.type === "all") {
-				// Seed full history on connect
-				const history = message.messages.map((m) => ({ ...m, ts: m.ts || Date.now() }));
+				// Seed full history on connect, including persisted system messages
+				const history: DisplayMessage[] = [
+					...message.messages.map((m) => ({ ...m, ts: m.ts || Date.now() })),
+					...message.systemMessages.map((m) => ({ ...m })),
+				];
+				history.sort((a, b) => (a.ts || 0) - (b.ts || 0));
 				setMessages(history);
 				// Don't count history as unread notifications
-				previousExternalCountRef.current = history.filter((m) => isChatMessage(m) && m.user !== name).length;
+				previousExternalCountRef.current = history.filter(
+					(m) => isChatMessage(m) && m.user !== name,
+				).length;
 			} else if (message.type === "system") {
 				const sysMsg: SystemMessage = {
 					type: "system",

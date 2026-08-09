@@ -5,13 +5,6 @@ export type SystemMessage = {
 	ts: number;
 };
 
-export type SystemMessage = {
-	type: "system";
-	id: string;
-	content: string;
-	ts: number;
-};
-
 export type ChatMessage = {
 	id: string;
 	content: string;
