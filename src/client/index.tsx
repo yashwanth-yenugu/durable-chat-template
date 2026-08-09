@@ -52,18 +52,29 @@ function getOrCreateName(): string {
 
 function playNotificationSound() {
 	try {
-		const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+		const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+		if (!AudioCtx) return;
+
+		let ctx = audioContextRef.current;
+		if (!ctx) {
+			ctx = new AudioCtx();
+			audioContextRef.current = ctx;
+		}
+		if (ctx.state === "suspended") {
+			ctx.resume().catch(() => {});
+		}
+
 		const now = ctx.currentTime;
 
 		const playTone = (freq: number, startTime: number, duration: number) => {
-			const osc = ctx.createOscillator();
-			const gain = ctx.createGain();
+			const osc = ctx!.createOscillator();
+			const gain = ctx!.createGain();
 			osc.type = "sine";
 			osc.frequency.value = freq;
 			gain.gain.setValueAtTime(0.15, startTime);
 			gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
 			osc.connect(gain);
-			gain.connect(ctx.destination);
+			gain.connect(ctx!.destination);
 			osc.start(startTime);
 			osc.stop(startTime + duration);
 		};
@@ -88,6 +99,26 @@ function App() {
 	const typingTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 	const typingDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const { room } = useParams();
+
+	// Track external message count to detect new arrivals
+	const previousExternalCountRef = useRef(0);
+	// Reuse a single AudioContext across notifications
+	const audioContextRef = useRef<AudioContext | null>(null);
+
+	// Resume AudioContext on first user interaction (browsers block autoplay)
+	useEffect(() => {
+		const resume = async () => {
+			if (audioContextRef.current?.state === "suspended") {
+				await audioContextRef.current.resume();
+			}
+		};
+		document.addEventListener("click", resume, { once: true });
+		document.addEventListener("keydown", resume, { once: true });
+		return () => {
+			document.removeEventListener("click", resume);
+			document.removeEventListener("keydown", resume);
+		};
+	}, []);
 
 	useEffect(() => {
 		inputRef.current?.focus();
@@ -114,6 +145,7 @@ function App() {
 			if (document.visibilityState === "visible") {
 				setUnreadCount(0);
 				document.title = "Chat!";
+				previousExternalCountRef.current = 0;
 			}
 		};
 		document.addEventListener("visibilitychange", handleVisibility);
@@ -163,9 +195,10 @@ function App() {
 				setOnlineUsers(message.users);
 			} else if (message.type === "all") {
 				// Seed full history on connect
-				setMessages(
-					message.messages.map((m) => ({ ...m, ts: m.ts || Date.now() })),
-				);
+				const history = message.messages.map((m) => ({ ...m, ts: m.ts || Date.now() }));
+				setMessages(history);
+				// Don't count history as unread notifications
+				previousExternalCountRef.current = history.filter((m) => isChatMessage(m) && m.user !== name).length;
 			} else if (message.type === "system") {
 				const sysMsg: SystemMessage = {
 					type: "system",
@@ -180,28 +213,27 @@ function App() {
 
 	// Detect new chat messages from others while tab is hidden and trigger sound/badge
 	useEffect(() => {
-		if (document.visibilityState !== "hidden") return;
+		if (document.visibilityState !== "hidden") {
+			previousExternalCountRef.current = 0;
+			return;
+		}
 
-		let previousLength = messages.length;
-		const timer = setInterval(() => {
-			if (messages.length > previousLength) {
-				const newItems = messages.slice(previousLength);
-				const hasExternalChat = newItems.some(
-					(m) => isChatMessage(m) && m.user !== name,
-				);
-				if (hasExternalChat) {
-					setUnreadCount((prev) => {
-						const next = prev + 1;
-						document.title = `(${next}) Chat!`;
-						return next;
-					});
-					playNotificationSound();
-				}
-				previousLength = messages.length;
+		// Count only chat messages from other users
+		const externalCount = messages.filter((m) => isChatMessage(m) && m.user !== name).length;
+		const delta = externalCount - previousExternalCountRef.current;
+
+		if (delta > 0) {
+			setUnreadCount((prev) => {
+				const next = prev + delta;
+				document.title = `(${next}) Chat!`;
+				return next;
+			});
+			for (let i = 0; i < delta; i++) {
+				playNotificationSound();
 			}
-		}, 500);
+		}
 
-		return () => clearInterval(timer);
+		previousExternalCountRef.current = externalCount;
 	}, [messages, name]);
 
 	/** Send a typing notification, debounced to once every 2 s */

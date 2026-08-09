@@ -16,6 +16,10 @@ Add browser notification badge (document title) with sound on new messages, and 
 - **Rendering**: Inline in the message flow, centered, muted, smaller text.
 - **Badge behavior**: Increment unread count + play sound only for new chat messages from other users while tab is hidden. System messages do not trigger sound/badge.
 <<<<<<< ours
+<<<<<<< ours
+=======
+- **Sound trigger boundary**: System messages (joins, leaves, TTL warnings) are silent. Only user-authored chat messages trigger sound/badge.
+>>>>>>> theirs
 =======
 - **Sound trigger boundary**: System messages (joins, leaves, TTL warnings) are silent. Only user-authored chat messages trigger sound/badge.
 >>>>>>> theirs

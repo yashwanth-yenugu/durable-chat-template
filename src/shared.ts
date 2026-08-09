@@ -5,6 +5,13 @@ export type SystemMessage = {
 	ts: number;
 };
 
+export type SystemMessage = {
+	type: "system";
+	id: string;
+	content: string;
+	ts: number;
+};
+
 export type ChatMessage = {
 	id: string;
 	content: string;
@@ -19,6 +26,12 @@ export const MAX_MESSAGE_LENGTH = 4000;
 
 /** Maximum number of messages stored per room */
 export const MAX_MESSAGES = 200;
+
+export type AllMessage = {
+	type: "all";
+	messages: ChatMessage[];
+	systemMessages: SystemMessage[];
+};
 
 export type Message =
 	| {
@@ -41,7 +54,7 @@ export type Message =
 	| { type: "typing"; user: string }
 	| { type: "join"; user: string }
 	| { type: "presence"; users: string[] }
-	| { type: "all"; messages: ChatMessage[] }
+	| AllMessage
 	| SystemMessage;
 
 export const names = [
