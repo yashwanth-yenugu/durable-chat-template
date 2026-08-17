@@ -1,8 +1,8 @@
 {
 	"manifest_version": 3,
-	"name": "Domain Chat",
+	"name": "Page Chat",
 	"version": "1.0.0",
-	"description": "Chat with others viewing the same website. Each domain is its own chat room.",
+	"description": "Chat with others on the same page. Each hostname + path is its own chat room.",
 	"permissions": ["storage"],
 	"host_permissions": [
 		"<all_urls>",
@@ -24,6 +24,6 @@
 		}
 	],
 	"action": {
-		"default_title": "Domain Chat"
+		"default_title": "Page Chat"
 	}
 }

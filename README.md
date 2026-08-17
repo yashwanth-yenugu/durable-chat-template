@@ -17,7 +17,7 @@ A real-time multi-room chat application built on [Cloudflare Workers](https://de
 - **Message deletion** — users can delete their own messages; deletions are broadcast instantly
 - **Auto-generated usernames** — random names drawn from a curated list (Indian cricketers 🏏) stored in `localStorage`
 - **Shareable rooms** — each room has a unique URL; visiting `/` redirects to a fresh room ID
-- **Domain Chat extension** — optional browser extension that uses the current site's domain as the chat room, so visitors on the same website can chat with each other
+- **Page Chat extension** — optional browser extension that uses the current page URL (hostname + path) as the chat room, so visitors on the same page can chat with each other
 - **Automatic cleanup** — rooms with no activity for 30 days are deleted via a Durable Object alarm
 
 ## How It Works
@@ -116,9 +116,9 @@ A live public deployment of this template is available at [https://durable-chat-
    ```
    This runs `tsc` for the client, server, and extension, then performs a Wrangler dry-run deploy to catch any configuration issues.
 
-## Browser Extension (Domain Chat)
+## Browser Extension (Page Chat)
 
-The optional extension lets people on the same website chat with each other. The current page's **hostname** becomes the chat room (e.g. everyone on `github.com` shares one room).
+The optional extension lets people on the same page chat with each other. The current page's **hostname + path** becomes the chat room (e.g. `github.com/user/repo` — users on that repo page share one room, not everyone on `github.com`).
 
 1. Deploy the Worker (or use the [live demo](https://durable-chat-template.templates.workers.dev)) so the WebSocket backend is available.
 2. Build the extension:
@@ -133,7 +133,7 @@ The optional extension lets people on the same website chat with each other. The
 
 By default the extension connects to `durable-chat-template.templates.workers.dev`. To use your own Worker, change `DEFAULT_CHAT_HOST` in `src/extension/config.ts` and rebuild. For local development, set it to `localhost:8787` while `npm run dev` is running.
 
-The standalone web app and extension share the same `ChatApp` component and backend — only the room ID source differs (URL path vs. page domain).
+The standalone web app and extension share the same `ChatApp` component and backend — only the room ID source differs (random URL slug vs. page hostname + path).
 
 ## Deployment
 
