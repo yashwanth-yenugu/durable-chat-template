@@ -22,6 +22,7 @@
 		"react-router": "^7.12.0"
 	},
 	"devDependencies": {
+		"@types/chrome": "^0.0.287",
 		"@types/react": "^19.2.8",
 		"@types/react-dom": "^19.2.3",
 		"esbuild": "0.27.2",
@@ -30,7 +31,10 @@
 	},
 	"scripts": {
 		"cf-typegen": "wrangler types ./src/server/worker-configuration.d.ts",
-		"check": "tsc --project src/client && tsc --project src/server && wrangler deploy --dry-run",
+		"check": "tsc --project src/client && tsc --project src/server && tsc --project src/extension && wrangler deploy --dry-run",
+		"build:extension": "npm run build:extension:panel && npm run build:extension:content",
+		"build:extension:panel": "esbuild src/extension/panel.tsx --bundle --format=esm --platform=browser --loader:.css=css --outdir=extension/dist && cp src/extension/panel.html extension/dist/",
+		"build:extension:content": "esbuild src/extension/content.ts --bundle --format=iife --platform=browser --outfile=extension/dist/content.js && cp src/extension/content.css extension/dist/content.css",
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev"
 	}

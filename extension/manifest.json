@@ -1,0 +1,29 @@
+{
+	"manifest_version": 3,
+	"name": "Domain Chat",
+	"version": "1.0.0",
+	"description": "Chat with others viewing the same website. Each domain is its own chat room.",
+	"permissions": ["storage"],
+	"host_permissions": [
+		"<all_urls>",
+		"https://durable-chat-template.templates.workers.dev/*",
+		"http://localhost:8787/*"
+	],
+	"content_scripts": [
+		{
+			"matches": ["http://*/*", "https://*/*"],
+			"js": ["dist/content.js"],
+			"css": ["dist/content.css"],
+			"run_at": "document_idle"
+		}
+	],
+	"web_accessible_resources": [
+		{
+			"resources": ["dist/panel.html", "dist/panel.js", "dist/panel.css"],
+			"matches": ["<all_urls>"]
+		}
+	],
+	"action": {
+		"default_title": "Domain Chat"
+	}
+}
