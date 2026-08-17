@@ -4,5 +4,6 @@
 		"jsx": "react",
 		"lib": ["DOM", "ESNext"]
 	},
-	"include": [".", "../chat"]
+	"include": [".", "../chat"],
+	"exclude": ["**/*.test.ts", "**/*.test.tsx"]
 }

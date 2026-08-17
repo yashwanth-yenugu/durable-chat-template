@@ -1,23 +1,17 @@
 import { DEFAULT_CHAT_HOST } from "./config";
+import {
+	ROOT_ID,
+	STORAGE_KEY,
+	buildPanelUrl,
+	isInjectablePage,
+	wrapHistoryMethod,
+} from "./contentHelpers";
 import { roomIdFromLocation } from "./roomId";
 
-const ROOT_ID = "domain-chat-extension-root";
-const STORAGE_KEY = "domain-chat-open";
-
-function isInjectablePage(): boolean {
-	return location.protocol === "http:" || location.protocol === "https:";
-}
-
-function panelUrl(room: string): string {
-	const params = new URLSearchParams({
-		room,
-		host: DEFAULT_CHAT_HOST,
-	});
-	return chrome.runtime.getURL(`dist/panel.html?${params}`);
-}
-
 function init() {
-	if (!isInjectablePage() || document.getElementById(ROOT_ID)) return;
+	if (!isInjectablePage(location.protocol) || document.getElementById(ROOT_ID)) {
+		return;
+	}
 
 	let currentRoom = roomIdFromLocation(location);
 
@@ -39,7 +33,7 @@ function init() {
 
 	const updateRoom = (room: string) => {
 		currentRoom = room;
-		iframe.src = panelUrl(room);
+		iframe.src = buildPanelUrl(room, DEFAULT_CHAT_HOST, chrome.runtime.getURL);
 		iframe.title = `Chat on ${room}`;
 		toggle.title = `Chat with others on ${room}`;
 		toggle.setAttribute("aria-label", `Open chat for ${room}`);
@@ -66,16 +60,8 @@ function init() {
 	window.addEventListener("popstate", onNavigate);
 	window.addEventListener("hashchange", onNavigate);
 
-	const wrapHistory = <T extends History["pushState"]>(method: T): T => {
-		return function (this: History, ...args: Parameters<T>) {
-			const result = method.apply(this, args);
-			onNavigate();
-			return result;
-		} as T;
-	};
-
-	history.pushState = wrapHistory(history.pushState);
-	history.replaceState = wrapHistory(history.replaceState);
+	history.pushState = wrapHistoryMethod(history.pushState, onNavigate);
+	history.replaceState = wrapHistoryMethod(history.replaceState, onNavigate);
 
 	panel.appendChild(iframe);
 	root.appendChild(panel);

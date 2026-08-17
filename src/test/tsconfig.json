@@ -1,0 +1,9 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"jsx": "react",
+		"lib": ["DOM", "ESNext"],
+		"types": ["vitest/globals", "chrome"]
+	},
+	"include": ["../**/*.test.ts", "../**/*.test.tsx", "setup.ts"]
+}

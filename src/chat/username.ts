@@ -1,32 +1,60 @@
 import { names } from "../shared";
 
-const STORAGE_KEY = "chat-username";
+export const STORAGE_KEY = "chat-username";
 
-function randomName(): string {
-	return names[Math.floor(Math.random() * names.length)];
+export function pickRandomName(random = Math.random): string {
+	return names[Math.floor(random() * names.length)];
 }
 
 /** Load or create a persistent username (localStorage or extension storage). */
-export async function getOrCreateUsername(): Promise<string> {
+export async function getOrCreateUsername(
+	storage: UsernameStorage = createDefaultStorage(),
+	random = Math.random,
+): Promise<string> {
+	const stored = await storage.get(STORAGE_KEY);
+	if (stored) return stored;
+
+	const name = pickRandomName(random);
+	await storage.set(STORAGE_KEY, name);
+	return name;
+}
+
+export type UsernameStorage = {
+	get(key: string): Promise<string | null>;
+	set(key: string, value: string): Promise<void>;
+};
+
+function createDefaultStorage(): UsernameStorage {
 	if (typeof chrome !== "undefined" && chrome.storage?.local) {
-		try {
-			const stored = await chrome.storage.local.get(STORAGE_KEY);
-			if (typeof stored[STORAGE_KEY] === "string") return stored[STORAGE_KEY];
-			const name = randomName();
-			await chrome.storage.local.set({ [STORAGE_KEY]: name });
-			return name;
-		} catch {
-			// fall through to localStorage
-		}
+		return {
+			async get(key) {
+				try {
+					const stored = await chrome.storage.local.get(key);
+					return typeof stored[key] === "string" ? stored[key] : null;
+				} catch {
+					return null;
+				}
+			},
+			async set(key, value) {
+				await chrome.storage.local.set({ [key]: value });
+			},
+		};
 	}
 
-	try {
-		const stored = localStorage.getItem(STORAGE_KEY);
-		if (stored) return stored;
-		const name = randomName();
-		localStorage.setItem(STORAGE_KEY, name);
-		return name;
-	} catch {
-		return randomName();
-	}
+	return {
+		async get(key) {
+			try {
+				return localStorage.getItem(key);
+			} catch {
+				return null;
+			}
+		},
+		async set(key, value) {
+			try {
+				localStorage.setItem(key, value);
+			} catch {
+				// ignore write failures in restricted contexts
+			}
+		},
+	};
 }

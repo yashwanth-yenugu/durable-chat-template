@@ -14,28 +14,22 @@ import {
 	type ChatMessage,
 	type Message,
 } from "../shared";
+import {
+	colorFor,
+	initials,
+	isValidMessageContent,
+	normaliseHistoryMessages,
+	removeChatMessage,
+	typingLabel,
+	upsertChatMessage,
+} from "./utils";
 import { getOrCreateUsername } from "./username";
-
-const AVATAR_COLORS = [
-	"#34D399",
-	"#60A5FA",
-	"#A78BFA",
-	"#F472B6",
-	"#F59E0B",
-	"#F87171",
-	"#FBBF24",
-];
-const colorFor = (u: string) =>
-	AVATAR_COLORS[u.charCodeAt(0) % AVATAR_COLORS.length];
-const initials = (u: string) => u.slice(0, 2).toUpperCase();
 
 export type ChatAppProps = {
 	room: string;
-	/** WebSocket host (defaults to current page origin). */
 	host?: string;
 	title?: string;
 	subtitle?: string;
-	/** Use 100% height instead of 100vh (for extension iframe). */
 	embedded?: boolean;
 };
 
@@ -101,23 +95,16 @@ export function ChatApp({
 			const message = JSON.parse(evt.data as string) as Message;
 
 			if (message.type === "add" || message.type === "update") {
-				setMessages((prev) => {
-					const foundIndex = prev.findIndex((m) => m.id === message.id);
-					const newMsg: ChatMessage = {
-						id: message.id,
-						content: message.content,
-						user: message.user,
-						role: message.role,
-						ts: message.ts ?? Date.now(),
-					};
-					if (foundIndex === -1) return [...prev, newMsg];
-					return prev
-						.slice(0, foundIndex)
-						.concat(newMsg)
-						.concat(prev.slice(foundIndex + 1));
-				});
+				const newMsg: ChatMessage = {
+					id: message.id,
+					content: message.content,
+					user: message.user,
+					role: message.role,
+					ts: message.ts ?? Date.now(),
+				};
+				setMessages((prev) => upsertChatMessage(prev, newMsg));
 			} else if (message.type === "delete") {
-				setMessages((prev) => prev.filter((m) => m.id !== message.id));
+				setMessages((prev) => removeChatMessage(prev, message.id));
 			} else if (message.type === "typing") {
 				const user = message.user;
 				setTypingUsers((prev) =>
@@ -132,9 +119,7 @@ export function ChatApp({
 			} else if (message.type === "presence") {
 				setOnlineUsers(message.users);
 			} else if (message.type === "all") {
-				setMessages(
-					message.messages.map((m) => ({ ...m, ts: m.ts || Date.now() })),
-				);
+				setMessages(normaliseHistoryMessages(message.messages));
 			}
 		},
 	});
@@ -159,7 +144,7 @@ export function ChatApp({
 	const handleDelete = useCallback(
 		(id: string) => {
 			if (!name) return;
-			setMessages((prev) => prev.filter((m) => m.id !== id));
+			setMessages((prev) => removeChatMessage(prev, id));
 			socket.send(
 				JSON.stringify({ type: "delete", id, user: name } satisfies Message),
 			);
@@ -167,13 +152,10 @@ export function ChatApp({
 		[socket, name],
 	);
 
-	const typingLabel = useMemo(() => {
-		const others = typingUsers.filter((u) => u !== name);
-		if (others.length === 0) return null;
-		if (others.length === 1) return `${others[0]} is typing…`;
-		if (others.length === 2) return `${others[0]} and ${others[1]} are typing…`;
-		return "Several people are typing…";
-	}, [typingUsers, name]);
+	const typingIndicator = useMemo(
+		() => typingLabel(typingUsers, name),
+		[typingUsers, name],
+	);
 
 	const displaySubtitle = subtitle ?? room;
 	const avatarLabel = displaySubtitle || room;
@@ -268,14 +250,14 @@ export function ChatApp({
 						</div>
 					);
 				})}
-				{typingLabel && (
+				{typingIndicator && (
 					<div className="typing-indicator" aria-live="polite">
 						<span className="typing-dots">
 							<span />
 							<span />
 							<span />
 						</span>
-						{typingLabel}
+						{typingIndicator}
 					</div>
 				)}
 			</main>
@@ -286,7 +268,7 @@ export function ChatApp({
 					e.preventDefault();
 					if (!name) return;
 					const content = input.trim();
-					if (!content || content.length > MAX_MESSAGE_LENGTH) return;
+					if (!isValidMessageContent(content, MAX_MESSAGE_LENGTH)) return;
 					const chatMessage: ChatMessage = {
 						ts: Date.now(),
 						id: nanoid(8),
@@ -326,10 +308,10 @@ export function ChatApp({
 				/>
 				<button
 					type="submit"
-					className={`btn ${input.trim() && input.trim().length <= MAX_MESSAGE_LENGTH && name ? "active" : "disabled"}`}
+					className={`btn ${isValidMessageContent(input, MAX_MESSAGE_LENGTH) && name ? "active" : "disabled"}`}
 					aria-label="Send message"
 					disabled={
-						!name || !input.trim() || input.trim().length > MAX_MESSAGE_LENGTH
+						!name || !isValidMessageContent(input, MAX_MESSAGE_LENGTH)
 					}
 				>
 					<svg

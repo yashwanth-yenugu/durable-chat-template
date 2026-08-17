@@ -110,11 +110,11 @@ A live public deployment of this template is available at [https://durable-chat-
    ```
    Open [http://localhost:8787](http://localhost:8787) in your browser. Open a second tab with the same URL to chat with yourself.
 
-3. Run type checks:
+3. Run type checks and tests:
    ```bash
    npm run check
    ```
-   This runs `tsc` for the client, server, and extension, then performs a Wrangler dry-run deploy to catch any configuration issues.
+   This runs `tsc` for the client, server, and extension, unit tests with 80%+ coverage (`npm run test:coverage`), and a Wrangler dry-run deploy.
 
 ## Browser Extension (Page Chat)
 
