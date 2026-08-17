@@ -9,6 +9,11 @@
 		"https://durable-chat-template.templates.workers.dev/*",
 		"http://localhost:8787/*"
 	],
+	"icons": {
+		"16": "icons/icon16.png",
+		"48": "icons/icon48.png",
+		"128": "icons/icon128.png"
+	},
 	"content_scripts": [
 		{
 			"matches": ["http://*/*", "https://*/*"],
@@ -24,6 +29,11 @@
 		}
 	],
 	"action": {
-		"default_title": "Page Chat"
+		"default_title": "Page Chat",
+		"default_icon": {
+			"16": "icons/icon16.png",
+			"48": "icons/icon48.png",
+			"128": "icons/icon128.png"
+		}
 	}
 }

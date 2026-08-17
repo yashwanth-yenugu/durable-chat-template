@@ -5,5 +5,5 @@
 		"lib": ["DOM", "ESNext"],
 		"types": ["chrome"]
 	},
-	"include": [".", "../chat", "../shared.ts"]
+	"include": [".", "../chat", "../shared.ts", "env.d.ts"]
 }

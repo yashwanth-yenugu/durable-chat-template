@@ -197,3 +197,7 @@ dist
 !.env.example
 .dev.vars*
 !.dev.vars.example
+
+### Extension store build ###
+extension-release/
+page-chat-extension.zip

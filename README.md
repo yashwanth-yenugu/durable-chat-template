@@ -125,13 +125,25 @@ The optional extension lets people on the same page chat with each other. The cu
    ```bash
    npm run build:extension
    ```
+   For a local backend: `CHAT_HOST=localhost:8787 npm run build:extension` (while `npm run dev` is running).
 3. Load it in Chrome/Edge:
    - Open `chrome://extensions`
    - Enable **Developer mode**
    - Click **Load unpacked** and select the `extension/` folder
 4. Visit any `http://` or `https://` page and click the floating 💬 button in the bottom-right corner.
 
-By default the extension connects to `durable-chat-template.templates.workers.dev`. To use your own Worker, change `DEFAULT_CHAT_HOST` in `src/extension/config.ts` and rebuild. For local development, set it to `localhost:8787` while `npm run dev` is running.
+By default the extension connects to `durable-chat-template.templates.workers.dev`. Override the backend host at build time with `CHAT_HOST=your-worker.workers.dev npm run build:extension`.
+
+### Chrome Web Store
+
+To create a production upload ZIP (icons included, no localhost permissions, privacy policy URL):
+
+```bash
+npm run build:extension:store
+# Or: CHAT_HOST=your-worker.workers.dev npm run build:extension:store
+```
+
+Upload `page-chat-extension.zip` to the [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole). See [extension/STORE.md](extension/STORE.md) for the full checklist. The privacy policy is served at `/privacy.html` on your deployed Worker.
 
 The standalone web app and extension share the same `ChatApp` component and backend — only the room ID source differs (random URL slug vs. page hostname + path).
 
