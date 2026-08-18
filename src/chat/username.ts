@@ -2,14 +2,20 @@ import { names } from "../shared";
 
 export const STORAGE_KEY = "chat-username";
 
-export function pickRandomName(random = Math.random): string {
+function secureRandom(): number {
+	const value = new Uint32Array(1);
+	crypto.getRandomValues(value);
+	return value[0]! * 2 ** -32;
+}
+
+export function pickRandomName(random: () => number = secureRandom): string {
 	return names[Math.floor(random() * names.length)];
 }
 
 /** Load or create a persistent username (localStorage or extension storage). */
 export async function getOrCreateUsername(
 	storage: UsernameStorage = createDefaultStorage(),
-	random = Math.random,
+	random: () => number = secureRandom,
 ): Promise<string> {
 	const stored = await storage.get(STORAGE_KEY);
 	if (stored) return stored;

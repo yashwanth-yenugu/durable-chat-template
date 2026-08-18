@@ -22,6 +22,13 @@ describe("pickRandomName", () => {
 	it("returns a name from the shared list", () => {
 		expect(names).toContain(pickRandomName(() => 0));
 	});
+
+	it("uses crypto.getRandomValues by default", () => {
+		const getRandomValues = vi.spyOn(crypto, "getRandomValues");
+		expect(names).toContain(pickRandomName());
+		expect(getRandomValues).toHaveBeenCalled();
+		getRandomValues.mockRestore();
+	});
 });
 
 describe("getOrCreateUsername", () => {
