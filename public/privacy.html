@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Page Chat — Privacy Policy</title>
+		<style>
+			body {
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+					sans-serif;
+				line-height: 1.6;
+				max-width: 720px;
+				margin: 2rem auto;
+				padding: 0 1rem;
+				color: #202c33;
+			}
+			h1,
+			h2 {
+				color: #075e54;
+			}
+			a {
+				color: #128c7e;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Page Chat — Privacy Policy</h1>
+		<p><strong>Last updated:</strong> August 17, 2026</p>
+
+		<p>
+			Page Chat is a browser extension that lets you chat in real time with
+			other people viewing the same web page (same hostname and path).
+		</p>
+
+		<h2>What we collect</h2>
+		<ul>
+			<li>
+				<strong>Username</strong> — a random display name generated on first use
+				and stored locally in your browser (<code>chrome.storage.local</code>).
+				You do not provide your real name or email.
+			</li>
+			<li>
+				<strong>Chat messages</strong> — text you send is transmitted to our
+				Cloudflare Worker backend and stored temporarily in a Durable Object
+				room keyed by the page URL (hostname + path). Up to 200 recent messages
+				per room are kept; inactive rooms are deleted after 30 days.
+			</li>
+			<li>
+				<strong>Page URL</strong> — the extension reads
+				<code>location.hostname</code> and <code>location.pathname</code> to
+				determine which chat room to join. The full browser URL is not sent to
+				our servers unless it appears in a message you type.
+			</li>
+		</ul>
+
+		<h2>What we do not collect</h2>
+		<ul>
+			<li>We do not require an account, email, or phone number.</li>
+			<li>
+				We do not track your browsing history beyond the current page path
+				needed to join the correct chat room.
+			</li>
+			<li>We do not sell or share your data with advertisers.</li>
+		</ul>
+
+		<h2>How data is used</h2>
+		<p>
+			Data is used solely to deliver real-time chat: showing message history,
+			presence (who is online), and typing indicators to other users in the
+			same room.
+		</p>
+
+		<h2>Third-party services</h2>
+		<p>
+			Chat traffic is processed on
+			<a href="https://www.cloudflare.com/">Cloudflare Workers</a> and
+			<a href="https://developers.cloudflare.com/durable-objects/"
+				>Durable Objects</a
+			>. Cloudflare's privacy policy applies to infrastructure processing.
+		</p>
+
+		<h2>Data retention</h2>
+		<p>
+			Messages are limited to the 200 most recent per room. Rooms with no
+			activity for 30 days are automatically deleted.
+		</p>
+
+		<h2>Permissions</h2>
+		<ul>
+			<li>
+				<strong>storage</strong> — save your username and whether the chat panel
+				is open.
+			</li>
+			<li>
+				<strong>host access (&lt;all_urls&gt;)</strong> — inject a chat button
+				on pages you visit so you can open the panel on any site.
+			</li>
+		</ul>
+
+		<h2>Children</h2>
+		<p>Page Chat is not directed at children under 13.</p>
+
+		<h2>Contact</h2>
+		<p>
+			Questions about this policy? Open an issue on the
+			<a href="https://github.com/yashwanth-yenugu/durable-chat-template"
+				>project repository</a
+			>.
+		</p>
+
+		<p><a href="/">Back to Page Chat</a></p>
+	</body>
+</html>

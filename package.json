@@ -22,15 +22,19 @@
 		"react-router": "^7.12.0"
 	},
 	"devDependencies": {
+		"@types/chrome": "^0.0.287",
 		"@types/react": "^19.2.8",
 		"@types/react-dom": "^19.2.3",
 		"esbuild": "0.27.2",
+		"sharp": "^0.35.3",
 		"typescript": "5.9.3",
 		"wrangler": "^4.59.1"
 	},
 	"scripts": {
 		"cf-typegen": "wrangler types ./src/server/worker-configuration.d.ts",
-		"check": "tsc --project src/client && tsc --project src/server && wrangler deploy --dry-run",
+		"check": "tsc --project src/client && tsc --project src/server && tsc --project src/extension && wrangler deploy --dry-run",
+		"build:extension": "node scripts/build-extension.mjs",
+		"build:extension:store": "node scripts/build-extension-store.mjs",
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev"
 	}

@@ -17,6 +17,7 @@ A real-time multi-room chat application built on [Cloudflare Workers](https://de
 - **Message deletion** — users can delete their own messages; deletions are broadcast instantly
 - **Auto-generated usernames** — random names drawn from a curated list (Indian cricketers 🏏) stored in `localStorage`
 - **Shareable rooms** — each room has a unique URL; visiting `/` redirects to a fresh room ID
+- **Page Chat extension** — optional browser extension that uses the current page URL (hostname + path) as the chat room, so visitors on the same page can chat with each other
 - **Automatic cleanup** — rooms with no activity for 30 days are deleted via a Durable Object alarm
 
 ## How It Works
@@ -51,7 +52,8 @@ All WebSocket frames carry JSON matching the `Message` discriminated union:
 | Runtime | [Cloudflare Workers](https://developers.cloudflare.com/workers/) |
 | State / WebSockets | [Durable Objects](https://developers.cloudflare.com/durable-objects/) with SQLite storage |
 | WebSocket framework | [PartyKit / partyserver](https://www.partykit.io/) |
-| Client framework | [React 19](https://react.dev/) + [React Router v7](https://reactrouter.com/) |
+| Client framework | [React 19](https://react.dev/) + [React Router v7](https://reactrouter.com/) (web app) |
+| Browser extension | Manifest V3 content script + iframe panel |
 | Client bundler | [esbuild](https://esbuild.github.io/) |
 | Static assets | Served by Cloudflare Workers Assets |
 | Language | TypeScript (strict, separate `tsconfig` per side) |
@@ -61,11 +63,22 @@ All WebSocket frames carry JSON matching the `Message` discriminated union:
 ```
 durable-chat-template/
 ├── src/
+│   ├── chat/
+│   │   ├── ChatApp.tsx     # Shared React chat UI (web app + extension)
+│   │   ├── styles.css
+│   │   └── username.ts
 │   ├── server/
 │   │   └── index.ts        # Durable Object (Chat class) + Worker fetch handler
 │   ├── client/
-│   │   └── index.tsx       # React UI — socket, messages, presence, typing
+│   │   └── index.tsx       # Standalone web app router
+│   ├── extension/
+│   │   ├── content.ts      # Injects floating chat button on every page
+│   │   ├── panel.tsx       # Extension iframe chat panel
+│   │   └── config.ts       # Backend host for extension WebSocket
 │   └── shared.ts           # Shared types (Message, ChatMessage) and constants
+├── extension/
+│   ├── manifest.json       # Browser extension manifest
+│   └── dist/               # esbuild output (auto-generated, not committed)
 ├── public/
 │   ├── dist/               # esbuild output (auto-generated, not committed)
 │   └── index.html          # Single-page app shell
@@ -101,7 +114,38 @@ A live public deployment of this template is available at [https://durable-chat-
    ```bash
    npm run check
    ```
-   This runs `tsc` for both `src/client` and `src/server`, then performs a Wrangler dry-run deploy to catch any configuration issues.
+   This runs `tsc` for the client, server, and extension, then performs a Wrangler dry-run deploy to catch any configuration issues.
+
+## Browser Extension (Page Chat)
+
+The optional extension lets people on the same page chat with each other. The current page's **hostname + path** becomes the chat room (e.g. `github.com/user/repo` — users on that repo page share one room, not everyone on `github.com`).
+
+1. Deploy the Worker (or use the [live demo](https://durable-chat-template.templates.workers.dev)) so the WebSocket backend is available.
+2. Build the extension:
+   ```bash
+   npm run build:extension
+   ```
+   For a local backend: `CHAT_HOST=localhost:8787 npm run build:extension` (while `npm run dev` is running).
+3. Load it in Chrome/Edge:
+   - Open `chrome://extensions`
+   - Enable **Developer mode**
+   - Click **Load unpacked** and select the `extension/` folder
+4. Visit any `http://` or `https://` page and click the floating 💬 button in the bottom-right corner.
+
+By default the extension connects to `durable-chat-template.templates.workers.dev`. Override the backend host at build time with `CHAT_HOST=your-worker.workers.dev npm run build:extension`.
+
+### Chrome Web Store
+
+To create a production upload ZIP (icons included, no localhost permissions, privacy policy URL):
+
+```bash
+npm run build:extension:store
+# Or: CHAT_HOST=your-worker.workers.dev npm run build:extension:store
+```
+
+Upload `page-chat-extension.zip` to the [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole). See [extension/STORE.md](extension/STORE.md) for the full checklist. The privacy policy is served at `/privacy.html` on your deployed Worker.
+
+The standalone web app and extension share the same `ChatApp` component and backend — only the room ID source differs (random URL slug vs. page hostname + path).
 
 ## Deployment
 
