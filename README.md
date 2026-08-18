@@ -1,6 +1,7 @@
 # Durable Chat App
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/durable-chat-template)
+[![GitHub Release](https://img.shields.io/github/v/release/yashwanth-yenugu/durable-chat-template)](https://github.com/yashwanth-yenugu/durable-chat-template/releases)
 
 ![Template Preview](https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/da00d330-9a3b-40a2-e6df-b08813fb7200/public)
 
@@ -126,18 +127,21 @@ For AI agent and contributor conventions, see [AGENTS.md](AGENTS.md).
 
 The optional extension lets people on the same page chat with each other. The current page's **hostname + path** becomes the chat room (e.g. `github.com/user/repo` — users on that repo page share one room, not everyone on `github.com`).
 
-### Try it from GitHub Releases (no local build)
+### Manual installation (GitHub Releases)
 
-Pre-built ZIPs are published on [GitHub Releases](https://github.com/yashwanth-yenugu/durable-chat-template/releases). Prefer a tagged `v*` release (GitHub marks those as latest). Chrome cannot load a `.zip` as an unpacked extension — unzip first.
+Same sideload path as other Chrome extensions: download the ZIP from Releases, extract it, then Load unpacked. You do not need to clone the repo or run a build.
 
-1. Download `page-chat-extension-*.zip` from the latest release.
-2. Unzip it. The folder contains `manifest.json`, `dist/`, `icons/`, and `LOAD_UNPACKED.txt`.
-3. Open `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select that unzipped folder.
-4. Visit any `http://` or `https://` page and click the floating 💬 button in the bottom-right corner.
+1. Go to [Releases](https://github.com/yashwanth-yenugu/durable-chat-template/releases)
+2. Under **Assets**, download `page-chat-chrome.zip`
+3. Extract the ZIP to a folder on your computer
+4. Open `chrome://extensions`
+   - Enable **Developer mode**
+   - Click **Load unpacked** and select the folder you just extracted
+5. Visit any `http://` or `https://` page and click the floating 💬 button
 
-Release builds connect to `asyncawait.fun` unless the workflow was run with a different `CHAT_HOST`.
+Release builds connect to `asyncawait.fun`. Chrome cannot load the `.zip` file itself.
 
-Maintainers: push a `v*` tag (for example `git tag v1.0.1 && git push origin v1.0.1`) or run **Actions → Release Page Chat extension**.
+Maintainers: push a `v*` tag (`git tag v1.0.1 && git push origin v1.0.1`) or run **Actions → Release Page Chat extension**. Tagged releases show as latest; manual workflow runs are pre-releases.
 
 ### Build from source
 

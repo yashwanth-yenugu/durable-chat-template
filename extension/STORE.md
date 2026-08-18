@@ -6,7 +6,7 @@ The same store ZIP is attached to [GitHub Releases](https://github.com/yashwanth
 
 1. Push a version tag: `git tag v1.0.1 && git push origin v1.0.1`
 2. Or run **Actions → Release Page Chat extension** (creates a pre-release tagged `extension-<run>`)
-3. Testers download `page-chat-extension-<version>.zip`, **unzip** it, then **Load unpacked** on the folder that contains `manifest.json`
+3. Testers open the release **Assets**, download `page-chat-chrome.zip`, extract it, then **Load unpacked** on that folder
 
 Chrome cannot load the `.zip` file itself. Sideload instructions are also in `LOAD_UNPACKED.txt` inside the ZIP.
 

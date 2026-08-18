@@ -29,7 +29,7 @@ Upload `page-chat-extension.zip`. See `extension/STORE.md` for the full checklis
 
 CI (`.github/workflows/release-extension.yml`) builds the store ZIP and attaches it to a GitHub Release on `v*` tags or `workflow_dispatch`.
 
-Testers: download ZIP → unzip → `chrome://extensions` → Developer mode → Load unpacked → select the unzipped folder (`manifest.json` at the root). Chrome cannot load the zip file itself.
+Testers: Releases → Assets → `page-chat-chrome.zip` → extract → Load unpacked (Chrome cannot load a zip file itself).
 
 Optional: `EXTENSION_VERSION=v1.2.3 bun run build:extension:store` (Chrome `manifest.version` must be 1–4 numeric parts).
 

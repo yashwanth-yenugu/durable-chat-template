@@ -77,15 +77,17 @@ jobs:
           esac
           bun run build:extension:store
 
-      - name: Name ZIP with normalized version
+      - name: Name sideload ZIP
         id: zip
         run: |
           set -euo pipefail
           VERSION="$(python3 -c 'import json; print(json.load(open("extension-release/manifest.json"))["version"])')"
-          ZIP="page-chat-extension-${VERSION}.zip"
-          cp page-chat-extension.zip "$ZIP"
-          unzip -l "$ZIP" | grep -q ' manifest.json$'
-          echo "name=$ZIP" >> "$GITHUB_OUTPUT"
+          # Stable filename (WebChat pattern: web-chat-chrome.zip) so testers
+          # always pick the same Assets entry. Version lives in manifest.json.
+          STABLE="page-chat-chrome.zip"
+          cp page-chat-extension.zip "$STABLE"
+          unzip -l "$STABLE" | grep -q ' manifest.json$'
+          echo "name=$STABLE" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Publish GitHub Release
@@ -109,18 +111,18 @@ jobs:
             PRERELEASE=1
           fi
           cat > /tmp/extension-release-notes.md <<EOF
-          Download **${ZIP}**, unzip it, then load the folder in Chrome developer mode.
+          Download **page-chat-chrome.zip** from Assets, extract it, then Load unpacked in Chrome.
 
           Chrome cannot load a \`.zip\` as an unpacked extension.
 
-          1. Download \`${ZIP}\` from this release
-          2. Unzip it (the folder contains \`manifest.json\`)
+          1. Open this release and download \`${ZIP}\` from **Assets**
+          2. Extract the ZIP to a folder on your computer
           3. Open \`chrome://extensions\`
           4. Enable **Developer mode**
-          5. Click **Load unpacked** and select the unzipped folder
+          5. Click **Load unpacked** and select the folder you extracted
           6. Visit any \`http://\` or \`https://\` page and click the floating chat button
 
-          This build connects to \`${CHAT_HOST}\`.
+          This build connects to \`${CHAT_HOST}\`. Manifest version: \`${VERSION}\`.
 
           See \`LOAD_UNPACKED.txt\` inside the ZIP for the same steps.
           EOF

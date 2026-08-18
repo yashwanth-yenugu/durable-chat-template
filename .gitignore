@@ -202,5 +202,6 @@ dist
 extension-release/
 page-chat-extension.zip
 page-chat-extension-*.zip
+page-chat-chrome.zip
 package-lock.json
 public/dist/
