@@ -1,0 +1,17 @@
+---
+description: Cloudflare Workers, Durable Objects, PartyServer, and wrangler config
+globs: src/server/**, wrangler.json
+alwaysApply: false
+---
+
+# Cloudflare Workers & Durable Objects
+
+- Entry: @src/server/index.ts — `Chat` class extends partyserver `Server`, hibernation enabled.
+- Pure logic is extracted: @src/server/validate.ts, @src/server/chatLogic.ts, @src/server/presence.ts, @src/server/constants.ts.
+- Validate all inbound WebSocket payloads via `parseInboundMessage` / `validateInboundMessage`.
+- Messages persist in DO SQLite (`messages` table); max @src/shared.ts `MAX_MESSAGES` per room; 30-day TTL via alarm.
+- Bindings and migrations: @wrangler.json — `Chat` Durable Object uses `new_sqlite_classes` migration.
+- No Node-only APIs in Worker code unless Workers-compatible.
+- After binding changes: `bun run cf-typegen`.
+- Tests mock `partyserver`: @src/server/index.test.ts, @src/server/validate.test.ts.
+- Deploy: `bun run deploy`; observability enabled in wrangler config.

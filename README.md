@@ -98,6 +98,8 @@ npm create cloudflare@latest -- --template=cloudflare/templates/durable-chat-tem
 
 A live public deployment of this template is available at [https://durable-chat-template.templates.workers.dev](https://durable-chat-template.templates.workers.dev)
 
+For AI agent and contributor conventions, see [AGENTS.md](AGENTS.md).
+
 ## Local Development
 
 1. Install dependencies:

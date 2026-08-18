@@ -1,0 +1,17 @@
+---
+description: Chrome MV3 Page Chat extension — content script, iframe panel, builds
+globs: src/extension/**, extension/**, scripts/build-extension*.mjs
+alwaysApply: false
+---
+
+# Browser extension (Page Chat)
+
+- Manifest: @extension/manifest.json (MV3). Load unpacked from `extension/` after build.
+- Source: @src/extension/content.ts injects toggle + iframe; @src/extension/panel.tsx renders `ChatApp`.
+- Room id: @src/extension/roomId.ts — `hostname + pathname`, normalised via `normalizeRoomId()`.
+- Helpers: @src/extension/contentHelpers.ts — injectable page check, panel URL, SPA history wrapping.
+- Backend host baked at build: `CHAT_HOST` env → `__CHAT_HOST__` in @src/extension/config.ts via esbuild `--define`.
+- Builds: `bun run build:extension` (dev, may include localhost); `bun run build:extension:store` (store ZIP).
+- Iframe uses extension origin to avoid page CSP issues on WebSockets.
+- Store publishing checklist: @extension/STORE.md.
+- Tests: @src/extension/roomId.test.ts, @src/extension/contentHelpers.test.ts.

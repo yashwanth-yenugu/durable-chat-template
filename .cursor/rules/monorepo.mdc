@@ -1,0 +1,13 @@
+---
+alwaysApply: true
+---
+
+# Monorepo conventions
+
+- Package manager: **Bun** (`bun run …`). CI uses `bun install --frozen-lockfile`.
+- After code changes: run `bun run test` for touched areas; run `bun run check` before finishing.
+- Minimize scope — smallest correct diff; do not refactor unrelated code.
+- Shared protocol and constants live in @src/shared.ts — update it first when changing message shapes.
+- Do not edit generated artifacts: `public/dist/`, `extension/dist/`, `coverage/`, @src/server/worker-configuration.d.ts (use `bun run cf-typegen`).
+- Agent branches: `cursor/<descriptive-name>-6eb8`.
+- Canonical examples: @src/server/index.ts, @src/chat/ChatApp.tsx, @src/extension/content.ts.
