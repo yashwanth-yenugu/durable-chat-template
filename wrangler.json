@@ -1,4 +1,5 @@
 {
+	"$schema": "./node_modules/wrangler/config-schema.json",
 	"compatibility_date": "2025-11-17",
 	"main": "src/server/index.ts",
 	"name": "durable-chat-template",

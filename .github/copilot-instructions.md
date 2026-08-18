@@ -1,35 +1,47 @@
-This repository is a small Cloudflare Workers + Durable Objects template for a real-time chat app using PartyKit.
+This repository is a Cloudflare Workers + Durable Objects real-time chat app with an optional browser extension.
 
-Key points for editing and generating code here:
+## Architecture
 
-- Big picture
-  - The project uses Cloudflare Workers (server) and a static React client built with esbuild into `public/dist`.
-  - Durable Objects are used to store chat room state (see `src/server/index.ts` — the `Chat` class).
-  - PartyKit `Server` and `partysocket` handle WebSocket connections and message routing.
+- **Worker** (`src/server/`) — `Chat` Durable Object (SQLite storage) + static asset handler
+- **Web app** (`src/client/`) — React SPA with shareable room URLs
+- **Extension** (`src/extension/`, `extension/`) — Page Chat overlay; room = hostname + path
+- **Shared UI** (`src/chat/`) — `ChatApp` used by web app and extension
+- **Protocol** (`src/shared.ts`) — `Message` types and constants
 
-- Where to make changes
-  - Server logic: `src/server/index.ts` (Durable Object class and request handler). Durable Object SQL storage is available via `this.ctx.storage.sql`.
-  - Client UI: `src/client/index.tsx`. Client connects to a party with `usePartySocket({ party: 'chat', room })`.
-  - Shared types and message formats: `src/shared.ts`.
+PartyKit `partyserver` / `partysocket` handle WebSocket routing (`CHAT_PARTY = "chat"`).
 
-- Conventions & patterns
-  - Messages are shuttle objects described in `src/shared.ts` (type `Message`) and are serialized via JSON over WebSocket.
-  - Server uses SQL storage helpers in Durable Objects (see `this.ctx.storage.sql.exec(...)`) and uses `ON CONFLICT` upserts for messages.
-  - The server broadcasts raw incoming WebSocket messages to all connections; it *also* persists messages when receiving `add` or `update` message types.
+## Where to make changes
 
-- Testing and Type Safety
-  - TypeScript projects are split into `src/client` and `src/server` with their own `tsconfig.json`. Use `bun run check` to run both projects' type checks plus a Wrangler dry-run deploy.
+| Area | Files |
+|------|-------|
+| Message protocol | `src/shared.ts` first, then client + server |
+| Server logic | `src/server/index.ts`, `validate.ts`, `chatLogic.ts`, `presence.ts` |
+| Chat UI | `src/chat/ChatApp.tsx`, `utils.ts`, `username.ts` |
+| Extension | `src/extension/content.ts`, `roomId.ts`, `config.ts` |
+| Build / deploy | `wrangler.json`, `package.json`, `scripts/` |
 
-- Common tasks for the agent
-  - When adding features that change message shapes, update `src/shared.ts` first and then update both client and server.
-  - Keep Durable Object SQL schema updates in `onStart` or migrations in `wrangler.json`.
-  - Avoid changing WebSocket semantics; ensure `Message.type` remains compatible for broadcast and persistence.
+## Commands (Bun)
 
-- Important files to reference in PRs
-  - `src/server/index.ts` — Durable Object implementation and request handler
-  - `src/client/index.tsx` — UI and socket logic
-  - `src/shared.ts` — canonical types and helper names
-  - `wrangler.json` — deployment and build settings
-  - `README.md` — quick start and docs
+```bash
+bun install              # install dependencies
+bun run dev              # local Worker + web app
+bun run check            # tsc + tests + wrangler dry-run
+bun run test:coverage    # unit tests (80%+ coverage enforced)
+bun run deploy           # deploy to Cloudflare
+bun run build:extension  # build browser extension
+```
 
-If something is unclear (dev workflow, a shape, or runtime detail), ask for the specific file or the expected behavior before making breaking changes.
+## Conventions
+
+- Messages are JSON `Message` unions over WebSocket; see `src/shared.ts`
+- Durable Object SQL schema changes go in `Chat.onStart()` or `wrangler.json` migrations
+- Room ids longer than 200 chars are normalised via `normalizeRoomId()`
+- Extension backend host is baked at build time via `CHAT_HOST` (see `scripts/build-extension.mjs`)
+- TypeScript projects: `src/client`, `src/server`, `src/extension` (tests excluded from app tsconfigs)
+
+## Testing
+
+- Vitest + Testing Library; config in `vitest.config.ts`
+- Server DO tests mock `partyserver` and use harness in `src/server/index.test.ts`
+
+If changing WebSocket semantics or message shapes, update `src/shared.ts` and keep client/server/extension in sync.

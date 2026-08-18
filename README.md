@@ -57,6 +57,7 @@ All WebSocket frames carry JSON matching the `Message` discriminated union:
 | Client bundler | [esbuild](https://esbuild.github.io/) |
 | Static assets | Served by Cloudflare Workers Assets |
 | Language | TypeScript (strict, separate `tsconfig` per side) |
+| Package manager | [Bun](https://bun.sh/) |
 
 ## Project Structure
 
@@ -82,7 +83,10 @@ durable-chat-template/
 ├── public/
 │   ├── dist/               # esbuild output (auto-generated, not committed)
 │   └── index.html          # Single-page app shell
+├── scripts/                 # Extension build scripts
+├── vitest.config.ts
 ├── wrangler.json            # Cloudflare deployment config
+├── bun.lock
 └── package.json
 ```
 
@@ -100,21 +104,21 @@ A live public deployment of this template is available at [https://durable-chat-
 
 ## Local Development
 
-1. Install dependencies:
+1. Install [Bun](https://bun.sh/) and dependencies:
    ```bash
-   npm install
+   bun install
    ```
 2. Start the local dev server (Wrangler builds the client and starts a local Worker):
    ```bash
-   npm run dev
+   bun run dev
    ```
    Open [http://localhost:8787](http://localhost:8787) in your browser. Open a second tab with the same URL to chat with yourself.
 
 3. Run type checks and tests:
    ```bash
-   npm run check
+   bun run check
    ```
-   This runs `tsc` for the client, server, and extension, unit tests with 80%+ coverage (`npm run test:coverage`), and a Wrangler dry-run deploy.
+   This runs `tsc` for the client, server, and extension, unit tests with 80%+ coverage (`bun run test:coverage`), and a Wrangler dry-run deploy.
 
 ## Browser Extension (Page Chat)
 
@@ -123,24 +127,24 @@ The optional extension lets people on the same page chat with each other. The cu
 1. Deploy the Worker (or use the [live demo](https://durable-chat-template.templates.workers.dev)) so the WebSocket backend is available.
 2. Build the extension:
    ```bash
-   npm run build:extension
+   bun run build:extension
    ```
-   For a local backend: `CHAT_HOST=localhost:8787 npm run build:extension` (while `npm run dev` is running).
+   For a local backend: `CHAT_HOST=localhost:8787 bun run build:extension` (while `bun run dev` is running).
 3. Load it in Chrome/Edge:
    - Open `chrome://extensions`
    - Enable **Developer mode**
    - Click **Load unpacked** and select the `extension/` folder
 4. Visit any `http://` or `https://` page and click the floating 💬 button in the bottom-right corner.
 
-By default the extension connects to `durable-chat-template.templates.workers.dev`. Override the backend host at build time with `CHAT_HOST=your-worker.workers.dev npm run build:extension`.
+By default the extension connects to `durable-chat-template.templates.workers.dev`. Override the backend host at build time with `CHAT_HOST=your-worker.workers.dev bun run build:extension`.
 
 ### Chrome Web Store
 
 To create a production upload ZIP (icons included, no localhost permissions, privacy policy URL):
 
 ```bash
-npm run build:extension:store
-# Or: CHAT_HOST=your-worker.workers.dev npm run build:extension:store
+bun run build:extension:store
+# Or: CHAT_HOST=your-worker.workers.dev bun run build:extension:store
 ```
 
 Upload `page-chat-extension.zip` to the [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole). See [extension/STORE.md](extension/STORE.md) for the full checklist. The privacy policy is served at `/privacy.html` on your deployed Worker.
@@ -151,7 +155,7 @@ The standalone web app and extension share the same `ChatApp` component and back
 
 1. Deploy to Cloudflare Workers:
    ```bash
-   npm run deploy
+   bun run deploy
    ```
    Wrangler will bundle the client with esbuild, upload the Worker, and provision the Durable Object class automatically.
 
