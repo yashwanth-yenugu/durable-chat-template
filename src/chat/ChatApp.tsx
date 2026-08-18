@@ -10,6 +10,7 @@ import { usePartySocket } from "partysocket/react";
 import { nanoid } from "nanoid";
 
 import {
+	CHAT_PARTY,
 	MAX_MESSAGE_LENGTH,
 	type ChatMessage,
 	type Message,
@@ -82,7 +83,7 @@ export function ChatApp({
 	}, []);
 
 	const socket = usePartySocket({
-		party: "chat",
+		party: CHAT_PARTY,
 		room,
 		host: host ?? window.location.host,
 		onOpen() {

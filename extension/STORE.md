@@ -5,13 +5,13 @@
 Deploy your Worker first (or use the demo host), then run:
 
 ```bash
-npm install --legacy-peer-deps
+bun install
 
 # Default: durable-chat-template.templates.workers.dev
-npm run build:extension:store
+bun run build:extension:store
 
 # Or use your own Worker hostname:
-CHAT_HOST=your-worker.your-subdomain.workers.dev npm run build:extension:store
+CHAT_HOST=your-worker.your-subdomain.workers.dev bun run build:extension:store
 ```
 
 This creates:
@@ -84,20 +84,29 @@ Google may ask why you need `<all_urls>`:
 ## 7. Updates
 
 1. Bump `"version"` in `scripts/build-extension-store.mjs` (manifest template)
-2. Rebuild: `npm run build:extension:store`
+2. Rebuild: `bun run build:extension:store`
 3. Upload the new ZIP in the dashboard
 
 ## Dev vs store builds
 
 | Command | Use case |
 |---------|----------|
-| `npm run build:extension` | Local development (may include localhost backend) |
-| `npm run build:extension:store` | Chrome Web Store upload (production host only) |
+| `bun run build:extension` | Local development (may include localhost backend) |
+| `bun run build:extension:store` | Chrome Web Store upload (production host only) |
 
 For local backend testing:
 
 ```bash
-CHAT_HOST=localhost:8787 npm run build:extension
+CHAT_HOST=localhost:8787 bun run build:extension
 ```
 
 Load unpacked from `extension/` (not the store package).
+
+## Regenerating icons (optional)
+
+Icons in `extension/icons/` were generated with `sharp`. To recreate after changing the design:
+
+```bash
+bun add -d sharp
+# place source image at extension/icons/icon128.png, then resize with sharp
+```

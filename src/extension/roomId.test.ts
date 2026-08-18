@@ -29,4 +29,12 @@ describe("roomIdFromLocation", () => {
 			}),
 		).toBe("example.com/docs/guide");
 	});
+
+	it("normalises very long paths", () => {
+		const room = roomIdFromLocation({
+			hostname: "example.com",
+			pathname: `/${"segment/".repeat(80)}`,
+		});
+		expect(room.length).toBeLessThanOrEqual(200);
+	});
 });
