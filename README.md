@@ -128,7 +128,7 @@ The optional extension lets people on the same page chat with each other. The cu
 
 ### Try it from GitHub Releases (no local build)
 
-Pre-built ZIPs are published on [GitHub Releases](https://github.com/yashwanth-yenugu/durable-chat-template/releases/latest). Chrome cannot load a `.zip` as an unpacked extension — unzip first.
+Pre-built ZIPs are published on [GitHub Releases](https://github.com/yashwanth-yenugu/durable-chat-template/releases). Prefer a tagged `v*` release (GitHub marks those as latest). Chrome cannot load a `.zip` as an unpacked extension — unzip first.
 
 1. Download `page-chat-extension-*.zip` from the latest release.
 2. Unzip it. The folder contains `manifest.json`, `dist/`, `icons/`, and `LOAD_UNPACKED.txt`.

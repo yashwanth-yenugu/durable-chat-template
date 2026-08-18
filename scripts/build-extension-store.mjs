@@ -20,6 +20,7 @@ const privacyUrl =
 	process.env.PRIVACY_URL ?? `https://${chatHost}/privacy.html`;
 const version = chromeExtensionVersion(process.env.EXTENSION_VERSION);
 const outDir = join(root, "extension-release");
+const zipPath = join(root, "page-chat-extension.zip");
 const define = `--define:__CHAT_HOST__=${JSON.stringify(chatHost)}`;
 
 function runEsbuild(args) {
@@ -27,6 +28,7 @@ function runEsbuild(args) {
 }
 
 rmSync(outDir, { recursive: true, force: true });
+rmSync(zipPath, { force: true });
 mkdirSync(join(outDir, "dist"), { recursive: true });
 mkdirSync(join(outDir, "icons"), { recursive: true });
 

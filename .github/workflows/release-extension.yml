@@ -18,11 +18,17 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-extension
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -31,49 +37,76 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Check types, tests, and Worker dry-run
+        run: bun run check
+
       - name: Resolve extension version
         id: version
-        run: |
-          INPUT="${{ github.event.inputs.version }}"
-          if [ -n "$INPUT" ]; then
-            VERSION="$INPUT"
-          elif [ "${{ github.ref_type }}" = "tag" ]; then
-            VERSION="${{ github.ref_name }}"
-          else
-            VERSION="0.0.${{ github.run_number }}"
-          fi
-          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Build store / sideload package
         env:
-          CHAT_HOST: ${{ github.event.inputs.chat_host || 'asyncawait.fun' }}
-          EXTENSION_VERSION: ${{ steps.version.outputs.value }}
-        run: bun run build:extension:store
-
-      - name: Name ZIP with version
-        run: |
-          VERSION="${{ steps.version.outputs.value }}"
-          VERSION="${VERSION#v}"
-          cp page-chat-extension.zip "page-chat-extension-${VERSION}.zip"
-
-      - name: Publish GitHub Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CHAT_HOST: ${{ github.event.inputs.chat_host || 'asyncawait.fun' }}
-          RAW_VERSION: ${{ steps.version.outputs.value }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
           REF_TYPE: ${{ github.ref_type }}
           REF_NAME: ${{ github.ref_name }}
           RUN_NUMBER: ${{ github.run_number }}
         run: |
           set -euo pipefail
-          VERSION="${RAW_VERSION#v}"
+          if [ -n "${INPUT_VERSION:-}" ]; then
+            VERSION="$INPUT_VERSION"
+          elif [ "$REF_TYPE" = "tag" ]; then
+            VERSION="$REF_NAME"
+          else
+            VERSION="0.0.${RUN_NUMBER}"
+          fi
+          delimiter="version_$(openssl rand -hex 8)"
+          {
+            echo "value<<${delimiter}"
+            echo "$VERSION"
+            echo "${delimiter}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build store / sideload package
+        env:
+          CHAT_HOST: ${{ github.event.inputs.chat_host || 'asyncawait.fun' }}
+          EXTENSION_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          set -euo pipefail
+          case "$CHAT_HOST" in
+            *[!A-Za-z0-9.:-]*)
+              echo "Invalid CHAT_HOST: $CHAT_HOST" >&2
+              exit 1
+              ;;
+          esac
+          bun run build:extension:store
+
+      - name: Name ZIP with normalized version
+        id: zip
+        run: |
+          set -euo pipefail
+          VERSION="$(python3 -c 'import json; print(json.load(open("extension-release/manifest.json"))["version"])')"
           ZIP="page-chat-extension-${VERSION}.zip"
+          cp page-chat-extension.zip "$ZIP"
+          unzip -l "$ZIP" | grep -q ' manifest.json$'
+          echo "name=$ZIP" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHAT_HOST: ${{ github.event.inputs.chat_host || 'asyncawait.fun' }}
+          ZIP: ${{ steps.zip.outputs.name }}
+          VERSION: ${{ steps.zip.outputs.version }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
           if [ "$REF_TYPE" = "tag" ]; then
             TAG="$REF_NAME"
             TITLE="Page Chat extension ${TAG}"
+            PRERELEASE=0
           else
             TAG="extension-${RUN_NUMBER}"
             TITLE="Page Chat extension ${VERSION} (sideload)"
+            PRERELEASE=1
           fi
           cat > /tmp/extension-release-notes.md <<EOF
           Download **${ZIP}**, unzip it, then load the folder in Chrome developer mode.
@@ -91,13 +124,20 @@ jobs:
 
           See \`LOAD_UNPACKED.txt\` inside the ZIP for the same steps.
           EOF
-          if [ "$REF_TYPE" = "tag" ]; then
-            gh release create "$TAG" "$ZIP" page-chat-extension.zip \
-              --title "$TITLE" \
-              --notes-file /tmp/extension-release-notes.md
-          else
-            gh release create "$TAG" "$ZIP" page-chat-extension.zip \
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ZIP" --clobber
+            if [ "$PRERELEASE" = "1" ]; then
+              gh release edit "$TAG" --title "$TITLE" --notes-file /tmp/extension-release-notes.md --prerelease
+            else
+              gh release edit "$TAG" --title "$TITLE" --notes-file /tmp/extension-release-notes.md --latest
+            fi
+          elif [ "$PRERELEASE" = "1" ]; then
+            gh release create "$TAG" "$ZIP" \
               --title "$TITLE" \
               --notes-file /tmp/extension-release-notes.md \
               --prerelease
+          else
+            gh release create "$TAG" "$ZIP" \
+              --title "$TITLE" \
+              --notes-file /tmp/extension-release-notes.md
           fi
