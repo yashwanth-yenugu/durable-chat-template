@@ -1,7 +1,7 @@
 ---
 name: deploy-check
 description: Verify, test, and deploy the Cloudflare Worker. Use before production deploys or when CI/build fails.
-paths: src/server/**, wrangler.json, package.json, vitest.config.ts
+paths: src/server/**, wrangler.jsonc, package.json, vitest.config.ts
 ---
 
 # Deploy & verify
@@ -27,7 +27,7 @@ Privacy policy: `https://<your-worker>/privacy.html` (from `public/privacy.html`
 |-------|-----|
 | `lockfile had changes, but lockfile is frozen` | Run `bun install`, commit updated `bun.lock` |
 | Build token deleted/rolled | Cloudflare dashboard → Worker → Settings → Builds → API token → create/select new token |
-| Build command fails | Ensure `build.command` in wrangler.json succeeds; client builds to `public/dist/` |
+| Build command fails | Ensure `build.command` in wrangler.jsonc succeeds; client builds to `public/dist/` |
 
 ## Post-deploy
 

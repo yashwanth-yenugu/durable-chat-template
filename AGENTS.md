@@ -47,7 +47,7 @@ Extension backend host is set at build time: `CHAT_HOST=your-worker.workers.dev 
 - Server DO: `src/server/index.ts`, `validate.ts`, `chatLogic.ts`, `presence.ts`
 - Shared UI: `src/chat/ChatApp.tsx`, `utils.ts`, `username.ts`
 - Extension: `src/extension/content.ts`, `roomId.ts`, `config.ts`, `extension/manifest.json`
-- Deploy: `wrangler.json`, `package.json`
+- Deploy: `wrangler.jsonc`, `package.json`
 - Docs: `README.md`, `extension/STORE.md`
 
 ## Message protocol (`src/shared.ts`)
