@@ -60,7 +60,7 @@ WebSocket JSON messages use the `Message` discriminated union: `join`, `add`, `u
 - **Verify before PR:** `bun run check`
 - **Dev server:** `bun run dev` (port 8787)
 - **Extension smoke test:** `bun run build:extension`, load unpacked from `extension/` in Chrome
-- **Extension GitHub Releases:** tag `v*` or run `.github/workflows/release-extension.yml`; testers unzip the artifact and Load unpacked (Chrome cannot load a `.zip` directly)
+- **Extension GitHub Releases:** tag `v*` or run `.github/workflows/release-extension.yml`; testers download `page-chat-chrome.zip` from Assets, extract, and Load unpacked
 - **Deploy:** `bun run deploy`; privacy policy at `/privacy.html`
 - **Worker Builds:** if CI fails on build token, update **Settings → Builds → API token** in the Cloudflare dashboard (not a code fix)
 - **Secrets:** never commit `.env` / `.dev.vars`; use Cloudflare dashboard or Cursor Cloud secrets
