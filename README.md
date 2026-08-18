@@ -138,7 +138,7 @@ The optional extension lets people on the same page chat with each other. The cu
    - Click **Load unpacked** and select the `extension/` folder
 4. Visit any `http://` or `https://` page and click the floating 💬 button in the bottom-right corner.
 
-By default the extension connects to `durable-chat-template.templates.workers.dev`. Override the backend host at build time with `CHAT_HOST=your-worker.workers.dev bun run build:extension`.
+By default the extension connects to `asyncawait.fun`. Override the backend host at build time with `CHAT_HOST=your-worker.workers.dev bun run build:extension`.
 
 ### Chrome Web Store
 
