@@ -6,7 +6,6 @@
 	"permissions": ["storage"],
 	"host_permissions": [
 		"<all_urls>",
-		"https://durable-chat-template.templates.workers.dev/*",
 		"https://asyncawait.fun/*",
 		"http://localhost:8787/*"
 	],

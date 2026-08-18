@@ -9,7 +9,7 @@ on:
       chat_host:
         description: Worker hostname the extension should connect to (no https://)
         required: false
-        default: durable-chat-template.templates.workers.dev
+        default: asyncawait.fun
       version:
         description: Chrome manifest version (1–4 numeric parts). Empty uses the git tag or 0.0.<run_number>.
         required: false
@@ -46,7 +46,7 @@ jobs:
 
       - name: Build store / sideload package
         env:
-          CHAT_HOST: ${{ github.event.inputs.chat_host || 'durable-chat-template.templates.workers.dev' }}
+          CHAT_HOST: ${{ github.event.inputs.chat_host || 'asyncawait.fun' }}
           EXTENSION_VERSION: ${{ steps.version.outputs.value }}
         run: bun run build:extension:store
 
@@ -59,7 +59,7 @@ jobs:
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CHAT_HOST: ${{ github.event.inputs.chat_host || 'durable-chat-template.templates.workers.dev' }}
+          CHAT_HOST: ${{ github.event.inputs.chat_host || 'asyncawait.fun' }}
           RAW_VERSION: ${{ steps.version.outputs.value }}
           REF_TYPE: ${{ github.ref_type }}
           REF_NAME: ${{ github.ref_name }}

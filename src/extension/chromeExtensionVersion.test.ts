@@ -30,7 +30,7 @@ describe("chromeExtensionVersion", () => {
 describe("loadUnpackedInstructions", () => {
 	it("tells testers to unzip then Load unpacked, not to load the zip", () => {
 		const text = loadUnpackedInstructions({
-			chatHost: "durable-chat-template.templates.workers.dev",
+			chatHost: "asyncawait.fun",
 			version: "1.2.3",
 		});
 		expect(text).toContain("Page Chat 1.2.3");
@@ -38,7 +38,7 @@ describe("loadUnpackedInstructions", () => {
 		expect(text).toContain("Developer mode");
 		expect(text).toContain("Load unpacked");
 		expect(text).toContain("manifest.json");
-		expect(text).toContain("durable-chat-template.templates.workers.dev");
+		expect(text).toContain("asyncawait.fun");
 		expect(text).toMatch(/do not load the \.zip/i);
 	});
 });

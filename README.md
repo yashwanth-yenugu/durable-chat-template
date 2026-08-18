@@ -6,7 +6,7 @@
 
 <!-- dash-content-start -->
 
-A real-time multi-room chat application built on [Cloudflare Workers](https://developers.cloudflare.com/workers/) and [Durable Objects](https://developers.cloudflare.com/durable-objects/), using [PartyKit](https://www.partykit.io/) for WebSocket connection management. Visit the [live demo](https://durable-chat-template.templates.workers.dev) — you are dropped into a unique room and can invite others by sharing the URL.
+A real-time multi-room chat application built on [Cloudflare Workers](https://developers.cloudflare.com/workers/) and [Durable Objects](https://developers.cloudflare.com/durable-objects/), using [PartyKit](https://www.partykit.io/) for WebSocket connection management. Visit the [live demo](https://asyncawait.fun) — you are dropped into a unique room and can invite others by sharing the URL.
 
 ## Features
 
@@ -100,7 +100,7 @@ Outside of this repo, you can start a new project with this template using [C3](
 npm create cloudflare@latest -- --template=cloudflare/templates/durable-chat-template
 ```
 
-A live public deployment of this template is available at [https://durable-chat-template.templates.workers.dev](https://durable-chat-template.templates.workers.dev)
+A live public deployment of this template is available at [https://asyncawait.fun](https://asyncawait.fun)
 
 For AI agent and contributor conventions, see [AGENTS.md](AGENTS.md).
 
@@ -135,13 +135,13 @@ Pre-built ZIPs are published on [GitHub Releases](https://github.com/yashwanth-y
 3. Open `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select that unzipped folder.
 4. Visit any `http://` or `https://` page and click the floating 💬 button in the bottom-right corner.
 
-Release builds connect to `durable-chat-template.templates.workers.dev` unless the workflow was run with a different `CHAT_HOST`.
+Release builds connect to `asyncawait.fun` unless the workflow was run with a different `CHAT_HOST`.
 
 Maintainers: push a `v*` tag (for example `git tag v1.0.1 && git push origin v1.0.1`) or run **Actions → Release Page Chat extension**.
 
 ### Build from source
 
-1. Deploy the Worker (or use the [live demo](https://durable-chat-template.templates.workers.dev)) so the WebSocket backend is available.
+1. Deploy the Worker (or use the [live demo](https://asyncawait.fun)) so the WebSocket backend is available.
 2. Build the extension:
    ```bash
    bun run build:extension

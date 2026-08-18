@@ -86,7 +86,7 @@ https://<your-worker-host>/privacy.html
 
 The policy is served from `public/privacy.html`. For the demo:
 
-https://durable-chat-template.templates.workers.dev/privacy.html
+https://asyncawait.fun/privacy.html
 
 ### Permission justification
 
