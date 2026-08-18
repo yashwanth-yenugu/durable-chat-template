@@ -1,0 +1,15 @@
+---
+description: React 19 web client and shared chat UI components
+globs: src/client/**, src/chat/**, public/**
+alwaysApply: false
+---
+
+# React client & shared chat UI
+
+- Web app entry: @src/client/index.tsx — React Router, random room URLs.
+- Shared chat UI: @src/chat/ChatApp.tsx — used by web app and extension panel.
+- Utilities: @src/chat/utils.ts (message reducers, typing label, validation), @src/chat/username.ts.
+- Styles: @src/chat/styles.css — bundled by esbuild via @wrangler.json `build.command`.
+- WebSocket client: `usePartySocket` from partysocket; party name from `CHAT_PARTY` in @src/shared.ts.
+- Client bundle outputs to `public/dist/` — do not hand-edit; rebuild via `bun run dev` or wrangler build.
+- Tests: @src/chat/ChatApp.test.tsx (mock partysocket), @src/chat/utils.test.ts.

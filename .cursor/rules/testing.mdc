@@ -1,0 +1,15 @@
+---
+description: Vitest unit tests and coverage requirements
+globs: **/*.test.ts, **/*.test.tsx, vitest.config.ts, src/test/**
+alwaysApply: false
+---
+
+# Testing
+
+- Runner: Vitest; config @vitest.config.ts; setup @src/test/setup.ts.
+- Coverage threshold: **80%** lines/branches/functions/statements (enforced in `bun run test:coverage`).
+- Server DO tests must mock `partyserver` before importing @src/server/index.ts.
+- React tests: mock `partysocket/react`; use `cleanup()` between tests; mock `scrollIntoView` in setup.
+- Test files are excluded from app tsconfigs (`**/*.test.ts`, `**/*.test.tsx`).
+- Add tests when changing pure logic in `validate.ts`, `utils.ts`, `roomId.ts`, `shared.ts`, etc.
+- Full gate: `bun run check` (tsc + coverage + wrangler dry-run).
