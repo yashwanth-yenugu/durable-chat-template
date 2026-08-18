@@ -1,14 +1,10 @@
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
-	"compatibility_date": "2025-11-17",
-	"main": "src/server/index.ts",
 	"name": "durable-chat-template",
-	"migrations": [
-		{
-			"new_sqlite_classes": ["Chat"],
-			"tag": "v1"
-		}
-	],
+	"main": "src/server/index.ts",
+	// Set this to today's date
+	"compatibility_date": "2026-08-18",
+	"compatibility_flags": ["nodejs_compat"],
 	"assets": {
 		"directory": "./public",
 		"binding": "ASSETS",
@@ -25,8 +21,21 @@
 			}
 		]
 	},
+	"exports": {
+		"Chat": {
+			"type": "durable-object",
+			"storage": "sqlite"
+		}
+	},
 	"observability": {
-		"enabled": true
+		"enabled": true,
+		"logs": {
+			"head_sampling_rate": 1
+		},
+		"traces": {
+			"enabled": true,
+			"head_sampling_rate": 1
+		}
 	},
 	"upload_source_maps": false
 }

@@ -28,6 +28,7 @@
 		"@testing-library/react": "^16.3.0",
 		"@testing-library/user-event": "^14.6.1",
 		"@types/chrome": "^0.0.287",
+		"@types/node": "^26.2.0",
 		"@types/react": "^19.2.8",
 		"@types/react-dom": "^19.2.3",
 		"@vitest/coverage-v8": "^3.2.4",
@@ -36,7 +37,7 @@
 		"sharp": "^0.35.3",
 		"typescript": "5.9.3",
 		"vitest": "^3.2.4",
-		"wrangler": "^4.59.1"
+		"wrangler": "^4.124.0"
 	},
 	"scripts": {
 		"cf-typegen": "wrangler types ./src/server/worker-configuration.d.ts",

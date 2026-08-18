@@ -85,7 +85,7 @@ durable-chat-template/
 │   └── index.html          # Single-page app shell
 ├── scripts/                 # Extension build scripts
 ├── vitest.config.ts
-├── wrangler.json            # Cloudflare deployment config
+├── wrangler.jsonc           # Cloudflare deployment config
 ├── bun.lock
 └── package.json
 ```
@@ -168,14 +168,17 @@ The standalone web app and extension share the same `ChatApp` component and back
 
 ## Configuration
 
-Key settings in `wrangler.json`:
+Key settings in `wrangler.jsonc`:
 
 | Setting | Value | Notes |
 |---------|-------|-------|
+| `compatibility_date` | `2026-08-18` | Current Workers runtime behavior |
+| `compatibility_flags` | `nodejs_compat` | Node.js built-ins (default for this date; kept explicit) |
 | `main` | `src/server/index.ts` | Worker entry point |
 | `durable_objects.bindings` | `Chat` | Durable Object class |
+| `exports.Chat` | SQLite Durable Object | Declarative class lifecycle (replaces `migrations`) |
 | `assets.directory` | `./public` | Static files served via Workers Assets |
 | `build.command` | esbuild … | Client bundle built before each deploy |
-| `observability.enabled` | `true` | Workers Logs enabled by default |
+| `observability` | logs + traces | Workers Logs and tracing enabled |
 
-The `Chat` Durable Object uses the `new_sqlite_classes` migration tag (`v1` in `wrangler.json`) to opt-in to SQLite-backed storage.
+The `Chat` Durable Object is declared in `exports` with `"storage": "sqlite"`. Existing Workers that previously used the `v1` `new_sqlite_classes` migration can switch to `exports` without a data migration.
