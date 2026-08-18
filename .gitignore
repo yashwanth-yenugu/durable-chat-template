@@ -201,5 +201,6 @@ dist
 ### Extension store build ###
 extension-release/
 page-chat-extension.zip
+page-chat-extension-*.zip
 package-lock.json
 public/dist/

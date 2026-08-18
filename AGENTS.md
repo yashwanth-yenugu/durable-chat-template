@@ -28,7 +28,7 @@ bun run check                  # tsc (client, server, extension) + tests + wrang
 bun run deploy                 # deploy Worker
 bun run cf-typegen             # regenerate worker-configuration.d.ts after binding changes
 bun run build:extension        # dev extension build → extension/dist/
-bun run build:extension:store  # Chrome Web Store ZIP (production host, no localhost)
+bun run build:extension:store  # Chrome Web Store / GitHub Release ZIP (production host, no localhost)
 ```
 
 Extension backend host is set at build time: `CHAT_HOST=your-worker.workers.dev bun run build:extension`.
@@ -60,6 +60,7 @@ WebSocket JSON messages use the `Message` discriminated union: `join`, `add`, `u
 - **Verify before PR:** `bun run check`
 - **Dev server:** `bun run dev` (port 8787)
 - **Extension smoke test:** `bun run build:extension`, load unpacked from `extension/` in Chrome
+- **Extension GitHub Releases:** tag `v*` or run `.github/workflows/release-extension.yml`; testers unzip the artifact and Load unpacked (Chrome cannot load a `.zip` directly)
 - **Deploy:** `bun run deploy`; privacy policy at `/privacy.html`
 - **Worker Builds:** if CI fails on build token, update **Settings → Builds → API token** in the Cloudflare dashboard (not a code fix)
 - **Secrets:** never commit `.env` / `.dev.vars`; use Cloudflare dashboard or Cursor Cloud secrets

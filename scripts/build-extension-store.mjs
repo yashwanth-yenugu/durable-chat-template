@@ -8,12 +8,17 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+	chromeExtensionVersion,
+	loadUnpackedInstructions,
+} from "../src/extension/chromeExtensionVersion.ts";
 
 const root = join(fileURLToPath(new URL(".", import.meta.url)), "..");
 const chatHost =
 	process.env.CHAT_HOST ?? "durable-chat-template.templates.workers.dev";
 const privacyUrl =
 	process.env.PRIVACY_URL ?? `https://${chatHost}/privacy.html`;
+const version = chromeExtensionVersion(process.env.EXTENSION_VERSION);
 const outDir = join(root, "extension-release");
 const define = `--define:__CHAT_HOST__=${JSON.stringify(chatHost)}`;
 
@@ -56,7 +61,7 @@ cpSync(join(root, "extension/icons"), join(outDir, "icons"), { recursive: true }
 const manifest = {
 	manifest_version: 3,
 	name: "Page Chat",
-	version: "1.0.0",
+	version,
 	description:
 		"Chat with others on the same page. Each hostname + path is its own chat room.",
 	permissions: ["storage"],
@@ -95,11 +100,18 @@ writeFileSync(
 	join(outDir, "manifest.json"),
 	`${JSON.stringify(manifest, null, "\t")}\n`,
 );
+writeFileSync(
+	join(outDir, "LOAD_UNPACKED.txt"),
+	loadUnpackedInstructions({ chatHost, version }),
+);
 
-execSync(`zip -r ../page-chat-extension.zip manifest.json dist icons`, {
-	cwd: outDir,
-	stdio: "inherit",
-});
+execSync(
+	`zip -r ../page-chat-extension.zip manifest.json dist icons LOAD_UNPACKED.txt`,
+	{
+		cwd: outDir,
+		stdio: "inherit",
+	},
+);
 
 writeFileSync(
 	join(outDir, "STORE_UPLOAD.txt"),
@@ -107,6 +119,7 @@ writeFileSync(
 ============================================
 
 ZIP file: ${join(root, "page-chat-extension.zip")}
+Version: ${version}
 Backend host: ${chatHost}
 Privacy policy URL (use in store listing): ${privacyUrl}
 
@@ -119,4 +132,5 @@ See extension/STORE.md for the full publishing checklist.
 
 console.log("\nStore package ready:");
 console.log(`  ZIP: ${join(root, "page-chat-extension.zip")}`);
+console.log(`  Version: ${version}`);
 console.log(`  Privacy policy URL: ${privacyUrl}`);

@@ -126,6 +126,21 @@ For AI agent and contributor conventions, see [AGENTS.md](AGENTS.md).
 
 The optional extension lets people on the same page chat with each other. The current page's **hostname + path** becomes the chat room (e.g. `github.com/user/repo` — users on that repo page share one room, not everyone on `github.com`).
 
+### Try it from GitHub Releases (no local build)
+
+Pre-built ZIPs are published on [GitHub Releases](https://github.com/yashwanth-yenugu/durable-chat-template/releases/latest). Chrome cannot load a `.zip` as an unpacked extension — unzip first.
+
+1. Download `page-chat-extension-*.zip` from the latest release.
+2. Unzip it. The folder contains `manifest.json`, `dist/`, `icons/`, and `LOAD_UNPACKED.txt`.
+3. Open `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select that unzipped folder.
+4. Visit any `http://` or `https://` page and click the floating 💬 button in the bottom-right corner.
+
+Release builds connect to `durable-chat-template.templates.workers.dev` unless the workflow was run with a different `CHAT_HOST`.
+
+Maintainers: push a `v*` tag (for example `git tag v1.0.1 && git push origin v1.0.1`) or run **Actions → Release Page Chat extension**.
+
+### Build from source
+
 1. Deploy the Worker (or use the [live demo](https://durable-chat-template.templates.workers.dev)) so the WebSocket backend is available.
 2. Build the extension:
    ```bash
@@ -136,7 +151,7 @@ The optional extension lets people on the same page chat with each other. The cu
    - Open `chrome://extensions`
    - Enable **Developer mode**
    - Click **Load unpacked** and select the `extension/` folder
-4. Visit any `http://` or `https://` page and click the floating 💬 button in the bottom-right corner.
+4. Visit any `http://` or `https://` page and click the floating 💬 button.
 
 By default the extension connects to `durable-chat-template.templates.workers.dev`. Override the backend host at build time with `CHAT_HOST=your-worker.workers.dev bun run build:extension`.
 

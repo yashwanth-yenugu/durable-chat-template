@@ -1,0 +1,103 @@
+name: Release Page Chat extension
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      chat_host:
+        description: Worker hostname the extension should connect to (no https://)
+        required: false
+        default: durable-chat-template.templates.workers.dev
+      version:
+        description: Chrome manifest version (1–4 numeric parts). Empty uses the git tag or 0.0.<run_number>.
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.15
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Resolve extension version
+        id: version
+        run: |
+          INPUT="${{ github.event.inputs.version }}"
+          if [ -n "$INPUT" ]; then
+            VERSION="$INPUT"
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            VERSION="${{ github.ref_name }}"
+          else
+            VERSION="0.0.${{ github.run_number }}"
+          fi
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build store / sideload package
+        env:
+          CHAT_HOST: ${{ github.event.inputs.chat_host || 'durable-chat-template.templates.workers.dev' }}
+          EXTENSION_VERSION: ${{ steps.version.outputs.value }}
+        run: bun run build:extension:store
+
+      - name: Name ZIP with version
+        run: |
+          VERSION="${{ steps.version.outputs.value }}"
+          VERSION="${VERSION#v}"
+          cp page-chat-extension.zip "page-chat-extension-${VERSION}.zip"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHAT_HOST: ${{ github.event.inputs.chat_host || 'durable-chat-template.templates.workers.dev' }}
+          RAW_VERSION: ${{ steps.version.outputs.value }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          VERSION="${RAW_VERSION#v}"
+          ZIP="page-chat-extension-${VERSION}.zip"
+          if [ "$REF_TYPE" = "tag" ]; then
+            TAG="$REF_NAME"
+            TITLE="Page Chat extension ${TAG}"
+          else
+            TAG="extension-${RUN_NUMBER}"
+            TITLE="Page Chat extension ${VERSION} (sideload)"
+          fi
+          cat > /tmp/extension-release-notes.md <<EOF
+          Download **${ZIP}**, unzip it, then load the folder in Chrome developer mode.
+
+          Chrome cannot load a \`.zip\` as an unpacked extension.
+
+          1. Download \`${ZIP}\` from this release
+          2. Unzip it (the folder contains \`manifest.json\`)
+          3. Open \`chrome://extensions\`
+          4. Enable **Developer mode**
+          5. Click **Load unpacked** and select the unzipped folder
+          6. Visit any \`http://\` or \`https://\` page and click the floating chat button
+
+          This build connects to \`${CHAT_HOST}\`.
+
+          See \`LOAD_UNPACKED.txt\` inside the ZIP for the same steps.
+          EOF
+          if [ "$REF_TYPE" = "tag" ]; then
+            gh release create "$TAG" "$ZIP" page-chat-extension.zip \
+              --title "$TITLE" \
+              --notes-file /tmp/extension-release-notes.md
+          else
+            gh release create "$TAG" "$ZIP" page-chat-extension.zip \
+              --title "$TITLE" \
+              --notes-file /tmp/extension-release-notes.md \
+              --prerelease
+          fi

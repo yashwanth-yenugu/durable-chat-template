@@ -1,5 +1,23 @@
 # Publishing Page Chat to the Chrome Web Store
 
+## GitHub Releases (sideload testers)
+
+The same store ZIP is attached to [GitHub Releases](https://github.com/yashwanth-yenugu/durable-chat-template/releases) so people can try the extension in Chrome **Developer mode** without cloning the repo.
+
+1. Push a version tag: `git tag v1.0.1 && git push origin v1.0.1`
+2. Or run **Actions → Release Page Chat extension** (creates a pre-release tagged `extension-<run>`)
+3. Testers download `page-chat-extension-<version>.zip`, **unzip** it, then **Load unpacked** on the folder that contains `manifest.json`
+
+Chrome cannot load the `.zip` file itself. Sideload instructions are also in `LOAD_UNPACKED.txt` inside the ZIP.
+
+Set the Chrome manifest version with `EXTENSION_VERSION` (git tags like `v1.0.1` are accepted):
+
+```bash
+EXTENSION_VERSION=v1.0.1 bun run build:extension:store
+```
+
+---
+
 ## 1. Build the store package
 
 Deploy your Worker first (or use the demo host), then run:
@@ -83,9 +101,9 @@ Google may ask why you need `<all_urls>`:
 
 ## 7. Updates
 
-1. Bump `"version"` in `scripts/build-extension-store.mjs` (manifest template)
-2. Rebuild: `bun run build:extension:store`
-3. Upload the new ZIP in the dashboard
+1. Bump the version with `EXTENSION_VERSION` (or push a `v*` tag for GitHub Releases)
+2. Rebuild: `EXTENSION_VERSION=1.0.1 bun run build:extension:store`
+3. Upload the new ZIP in the dashboard (or use the ZIP from the GitHub Release)
 
 ## Dev vs store builds
 

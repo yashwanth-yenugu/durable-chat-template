@@ -45,7 +45,7 @@
 		"test": "vitest run",
 		"test:coverage": "vitest run --coverage",
 		"build:extension": "node scripts/build-extension.mjs",
-		"build:extension:store": "node scripts/build-extension-store.mjs",
+		"build:extension:store": "bun scripts/build-extension-store.mjs",
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev"
 	}
