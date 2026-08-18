@@ -25,7 +25,7 @@ Deploy your Worker first (or use the demo host), then run:
 ```bash
 bun install
 
-# Default: durable-chat-template.templates.workers.dev
+# Default: asyncawait.fun
 bun run build:extension:store
 
 # Or use your own Worker hostname:

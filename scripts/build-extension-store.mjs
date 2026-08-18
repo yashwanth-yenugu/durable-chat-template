@@ -15,7 +15,7 @@ import {
 
 const root = join(fileURLToPath(new URL(".", import.meta.url)), "..");
 const chatHost =
-	process.env.CHAT_HOST ?? "durable-chat-template.templates.workers.dev";
+	process.env.CHAT_HOST ?? "asyncawait.fun";
 const privacyUrl =
 	process.env.PRIVACY_URL ?? `https://${chatHost}/privacy.html`;
 const version = chromeExtensionVersion(process.env.EXTENSION_VERSION);

@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const root = join(fileURLToPath(new URL(".", import.meta.url)), "..");
 const chatHost =
-	process.env.CHAT_HOST ?? "durable-chat-template.templates.workers.dev";
+	process.env.CHAT_HOST ?? "asyncawait.fun";
 
 function run(args) {
 	execFileSync("esbuild", args, { cwd: root, stdio: "inherit" });

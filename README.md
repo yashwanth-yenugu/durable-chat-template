@@ -153,7 +153,7 @@ Maintainers: push a `v*` tag (for example `git tag v1.0.1 && git push origin v1.
    - Click **Load unpacked** and select the `extension/` folder
 4. Visit any `http://` or `https://` page and click the floating 💬 button.
 
-By default the extension connects to `durable-chat-template.templates.workers.dev`. Override the backend host at build time with `CHAT_HOST=your-worker.workers.dev bun run build:extension`.
+By default the extension connects to `asyncawait.fun`. Override the backend host at build time with `CHAT_HOST=your-worker.workers.dev bun run build:extension`.
 
 ### Chrome Web Store
 
