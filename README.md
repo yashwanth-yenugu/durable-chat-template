@@ -1,12 +1,13 @@
 # Durable Chat App
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/durable-chat-template)
+[![GitHub Release](https://img.shields.io/github/v/release/yashwanth-yenugu/durable-chat-template)](https://github.com/yashwanth-yenugu/durable-chat-template/releases)
 
 ![Template Preview](https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/da00d330-9a3b-40a2-e6df-b08813fb7200/public)
 
 <!-- dash-content-start -->
 
-A real-time multi-room chat application built on [Cloudflare Workers](https://developers.cloudflare.com/workers/) and [Durable Objects](https://developers.cloudflare.com/durable-objects/), using [PartyKit](https://www.partykit.io/) for WebSocket connection management. Visit the [live demo](https://durable-chat-template.templates.workers.dev) — you are dropped into a unique room and can invite others by sharing the URL.
+A real-time multi-room chat application built on [Cloudflare Workers](https://developers.cloudflare.com/workers/) and [Durable Objects](https://developers.cloudflare.com/durable-objects/), using [PartyKit](https://www.partykit.io/) for WebSocket connection management. Visit the [live demo](https://asyncawait.fun) — you are dropped into a unique room and can invite others by sharing the URL.
 
 ## Features
 
@@ -100,7 +101,7 @@ Outside of this repo, you can start a new project with this template using [C3](
 npm create cloudflare@latest -- --template=cloudflare/templates/durable-chat-template
 ```
 
-A live public deployment of this template is available at [https://durable-chat-template.templates.workers.dev](https://durable-chat-template.templates.workers.dev)
+A live public deployment of this template is available at [https://asyncawait.fun](https://asyncawait.fun)
 
 For AI agent and contributor conventions, see [AGENTS.md](AGENTS.md).
 
@@ -126,7 +127,25 @@ For AI agent and contributor conventions, see [AGENTS.md](AGENTS.md).
 
 The optional extension lets people on the same page chat with each other. The current page's **hostname + path** becomes the chat room (e.g. `github.com/user/repo` — users on that repo page share one room, not everyone on `github.com`).
 
-1. Deploy the Worker (or use the [live demo](https://durable-chat-template.templates.workers.dev)) so the WebSocket backend is available.
+### Manual installation (GitHub Releases)
+
+Same sideload path as other Chrome extensions: download the ZIP from Releases, extract it, then Load unpacked. You do not need to clone the repo or run a build.
+
+1. Go to [Releases](https://github.com/yashwanth-yenugu/durable-chat-template/releases)
+2. Under **Assets**, download `page-chat-chrome.zip`
+3. Extract the ZIP to a folder on your computer
+4. Open `chrome://extensions`
+   - Enable **Developer mode**
+   - Click **Load unpacked** and select the folder you just extracted
+5. Visit any `http://` or `https://` page and click the floating 💬 button
+
+Release builds connect to `asyncawait.fun`. Chrome cannot load the `.zip` file itself.
+
+Maintainers: push a `v*` tag (`git tag v1.0.1 && git push origin v1.0.1`) or run **Actions → Release Page Chat extension**. Tagged releases show as latest; manual workflow runs are pre-releases.
+
+### Build from source
+
+1. Deploy the Worker (or use the [live demo](https://asyncawait.fun)) so the WebSocket backend is available.
 2. Build the extension:
    ```bash
    bun run build:extension
@@ -136,7 +155,7 @@ The optional extension lets people on the same page chat with each other. The cu
    - Open `chrome://extensions`
    - Enable **Developer mode**
    - Click **Load unpacked** and select the `extension/` folder
-4. Visit any `http://` or `https://` page and click the floating 💬 button in the bottom-right corner.
+4. Visit any `http://` or `https://` page and click the floating 💬 button.
 
 By default the extension connects to `asyncawait.fun`. Override the backend host at build time with `CHAT_HOST=your-worker.workers.dev bun run build:extension`.
 

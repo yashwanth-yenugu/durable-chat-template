@@ -11,7 +11,8 @@ alwaysApply: false
 - Room id: @src/extension/roomId.ts — `hostname + pathname`, normalised via `normalizeRoomId()`.
 - Helpers: @src/extension/contentHelpers.ts — injectable page check, panel URL, SPA history wrapping.
 - Backend host baked at build: `CHAT_HOST` env → `__CHAT_HOST__` in @src/extension/config.ts via esbuild `--define`.
-- Builds: `bun run build:extension` (dev, may include localhost); `bun run build:extension:store` (store ZIP).
+- Builds: `bun run build:extension` (dev, may include localhost); `bun run build:extension:store` (store / GitHub Release ZIP).
+- Sideload testers: GitHub Releases → Assets → `page-chat-chrome.zip` → extract → Load unpacked. Workflow: `.github/workflows/release-extension.yml`.
 - Iframe uses extension origin to avoid page CSP issues on WebSockets.
 - Store publishing checklist: @extension/STORE.md.
 - Tests: @src/extension/roomId.test.ts, @src/extension/contentHelpers.test.ts.

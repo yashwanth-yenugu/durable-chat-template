@@ -25,6 +25,14 @@ CHAT_HOST=your-worker.workers.dev bun run build:extension:store
 
 Upload `page-chat-extension.zip`. See `extension/STORE.md` for the full checklist.
 
+## GitHub Releases (sideload, no local clone)
+
+CI (`.github/workflows/release-extension.yml`) builds the store ZIP and attaches it to a GitHub Release on `v*` tags or `workflow_dispatch`.
+
+Testers: Releases → Assets → `page-chat-chrome.zip` → extract → Load unpacked (Chrome cannot load a zip file itself).
+
+Optional: `EXTENSION_VERSION=v1.2.3 bun run build:extension:store` (Chrome `manifest.version` must be 1–4 numeric parts).
+
 ## Verify
 
 1. `extension/dist/content.js`, `panel.html`, `panel.js`, `panel.css` exist

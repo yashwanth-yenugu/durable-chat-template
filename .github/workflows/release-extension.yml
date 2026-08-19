@@ -1,0 +1,145 @@
+name: Release Page Chat extension
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      chat_host:
+        description: Worker hostname the extension should connect to (no https://)
+        required: false
+        default: asyncawait.fun
+      version:
+        description: Chrome manifest version (1–4 numeric parts). Empty uses the git tag or 0.0.<run_number>.
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-extension
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.15
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check types, tests, and Worker dry-run
+        run: bun run check
+
+      - name: Resolve extension version
+        id: version
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          if [ -n "${INPUT_VERSION:-}" ]; then
+            VERSION="$INPUT_VERSION"
+          elif [ "$REF_TYPE" = "tag" ]; then
+            VERSION="$REF_NAME"
+          else
+            VERSION="0.0.${RUN_NUMBER}"
+          fi
+          delimiter="version_$(openssl rand -hex 8)"
+          {
+            echo "value<<${delimiter}"
+            echo "$VERSION"
+            echo "${delimiter}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build store / sideload package
+        env:
+          CHAT_HOST: ${{ github.event.inputs.chat_host || 'asyncawait.fun' }}
+          EXTENSION_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          set -euo pipefail
+          case "$CHAT_HOST" in
+            *[!A-Za-z0-9.:-]*)
+              echo "Invalid CHAT_HOST: $CHAT_HOST" >&2
+              exit 1
+              ;;
+          esac
+          bun run build:extension:store
+
+      - name: Name sideload ZIP
+        id: zip
+        run: |
+          set -euo pipefail
+          VERSION="$(python3 -c 'import json; print(json.load(open("extension-release/manifest.json"))["version"])')"
+          # Stable filename (WebChat pattern: web-chat-chrome.zip) so testers
+          # always pick the same Assets entry. Version lives in manifest.json.
+          STABLE="page-chat-chrome.zip"
+          cp page-chat-extension.zip "$STABLE"
+          unzip -l "$STABLE" | grep -q ' manifest.json$'
+          echo "name=$STABLE" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHAT_HOST: ${{ github.event.inputs.chat_host || 'asyncawait.fun' }}
+          ZIP: ${{ steps.zip.outputs.name }}
+          VERSION: ${{ steps.zip.outputs.version }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          if [ "$REF_TYPE" = "tag" ]; then
+            TAG="$REF_NAME"
+            TITLE="Page Chat extension ${TAG}"
+            PRERELEASE=0
+          else
+            TAG="extension-${RUN_NUMBER}"
+            TITLE="Page Chat extension ${VERSION} (sideload)"
+            PRERELEASE=1
+          fi
+          cat > /tmp/extension-release-notes.md <<EOF
+          Download **page-chat-chrome.zip** from Assets, extract it, then Load unpacked in Chrome.
+
+          Chrome cannot load a \`.zip\` as an unpacked extension.
+
+          1. Open this release and download \`${ZIP}\` from **Assets**
+          2. Extract the ZIP to a folder on your computer
+          3. Open \`chrome://extensions\`
+          4. Enable **Developer mode**
+          5. Click **Load unpacked** and select the folder you extracted
+          6. Visit any \`http://\` or \`https://\` page and click the floating chat button
+
+          This build connects to \`${CHAT_HOST}\`. Manifest version: \`${VERSION}\`.
+
+          See \`LOAD_UNPACKED.txt\` inside the ZIP for the same steps.
+          EOF
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ZIP" --clobber
+            if [ "$PRERELEASE" = "1" ]; then
+              gh release edit "$TAG" --title "$TITLE" --notes-file /tmp/extension-release-notes.md --prerelease
+            else
+              gh release edit "$TAG" --title "$TITLE" --notes-file /tmp/extension-release-notes.md --latest
+            fi
+          elif [ "$PRERELEASE" = "1" ]; then
+            gh release create "$TAG" "$ZIP" \
+              --title "$TITLE" \
+              --notes-file /tmp/extension-release-notes.md \
+              --prerelease
+          else
+            gh release create "$TAG" "$ZIP" \
+              --title "$TITLE" \
+              --notes-file /tmp/extension-release-notes.md
+          fi
