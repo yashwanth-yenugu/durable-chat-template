@@ -5,7 +5,7 @@
 
 ![Choose a username on first visit](docs/screenshots/choose-username.png)
 
-![Chat after joining as Alex](docs/screenshots/chat-as-alex.png)
+![Username entered with Join chat enabled](docs/screenshots/username-join.png)
 
 <!-- dash-content-start -->
 
