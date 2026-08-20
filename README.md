@@ -3,7 +3,9 @@
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/durable-chat-template)
 [![GitHub Release](https://img.shields.io/github/v/release/yashwanth-yenugu/durable-chat-template)](https://github.com/yashwanth-yenugu/durable-chat-template/releases)
 
-![Template Preview](https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/da00d330-9a3b-40a2-e6df-b08813fb7200/public)
+![Choose a username on first visit](docs/screenshots/choose-username.png)
+
+![Chat after joining as Alex](docs/screenshots/chat-as-alex.png)
 
 <!-- dash-content-start -->
 
@@ -17,6 +19,7 @@ A real-time multi-room chat application built on [Cloudflare Workers](https://de
 - **Online presence** — a live count of users currently in the room
 - **Message deletion** — users can delete their own messages; deletions are broadcast instantly
 - **Chosen usernames** — first visit asks for a name; it is stored in `localStorage` (or extension storage) and reused
+- **Smart Placement** — the Worker uses [Cloudflare Smart Placement](https://developers.cloudflare.com/workers/configuration/placement/) so it can run closer to backends when that reduces latency
 - **Shareable rooms** — each room has a unique URL; visiting `/` redirects to a fresh room ID
 - **Page Chat extension** — optional browser extension that uses the current page URL (hostname + path) as the chat room, so visitors on the same page can chat with each other
 - **Automatic cleanup** — rooms with no activity for 30 days are deleted via a Durable Object alarm
@@ -78,6 +81,8 @@ durable-chat-template/
 │   │   ├── panel.tsx       # Extension iframe chat panel
 │   │   └── config.ts       # Backend host for extension WebSocket
 │   └── shared.ts           # Shared types (Message, ChatMessage) and constants
+├── docs/
+│   └── screenshots/        # README captures of the current chat UI
 ├── extension/
 │   ├── manifest.json       # Browser extension manifest
 │   └── dist/               # esbuild output (auto-generated, not committed)
@@ -199,5 +204,6 @@ Key settings in `wrangler.jsonc`:
 | `assets.directory` | `./public` | Static files served via Workers Assets |
 | `build.command` | esbuild … | Client bundle built before each deploy |
 | `observability` | logs + traces | Workers Logs and tracing enabled |
+| `placement.mode` | `smart` | [Smart Placement](https://developers.cloudflare.com/workers/configuration/placement/) — after deploy, Cloudflare may run the Worker closer to backends when that is faster |
 
 The `Chat` Durable Object is declared in `exports` with `"storage": "sqlite"`. Existing Workers that previously used the `v1` `new_sqlite_classes` migration can switch to `exports` without a data migration.
