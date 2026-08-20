@@ -3,13 +3,19 @@
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/durable-chat-template)
 [![GitHub Release](https://img.shields.io/github/v/release/yashwanth-yenugu/durable-chat-template)](https://github.com/yashwanth-yenugu/durable-chat-template/releases)
 
-![Choose a username on first visit](docs/screenshots/choose-username.png)
+Share a room URL and talk live — two browsers, same link, messages appear instantly:
 
-![Username entered with Join chat enabled](docs/screenshots/username-join.png)
+![Maya and Jordan chatting in the same room](docs/screenshots/multi-user-chat.gif)
+
+Or install **Page Chat** and talk to whoever is on the same webpage. The 💬 button opens a panel; the room is that page’s hostname + path:
+
+![Page Chat on example.com — same page, same room](docs/screenshots/page-chat-extension.gif)
+
+Try the [live demo](https://asyncawait.fun), or run `bun run dev` and open the same URL in two windows.
 
 <!-- dash-content-start -->
 
-A real-time multi-room chat application built on [Cloudflare Workers](https://developers.cloudflare.com/workers/) and [Durable Objects](https://developers.cloudflare.com/durable-objects/), using [PartyKit](https://www.partykit.io/) for WebSocket connection management. Visit the [live demo](https://asyncawait.fun) — you are dropped into a unique room and can invite others by sharing the URL.
+A real-time multi-room chat application built on [Cloudflare Workers](https://developers.cloudflare.com/workers/) and [Durable Objects](https://developers.cloudflare.com/durable-objects/), using [PartyKit](https://www.partykit.io/) for WebSocket connection management.
 
 ## Features
 
@@ -82,7 +88,7 @@ durable-chat-template/
 │   │   └── config.ts       # Backend host for extension WebSocket
 │   └── shared.ts           # Shared types (Message, ChatMessage) and constants
 ├── docs/
-│   └── screenshots/        # README captures of the current chat UI
+│   └── screenshots/        # README GIFs: multi-user room + Page Chat extension
 ├── extension/
 │   ├── manifest.json       # Browser extension manifest
 │   └── dist/               # esbuild output (auto-generated, not committed)
@@ -120,7 +126,7 @@ For AI agent and contributor conventions, see [AGENTS.md](AGENTS.md).
    ```bash
    bun run dev
    ```
-   Open [http://localhost:8787](http://localhost:8787) in your browser. Open a second tab with the same URL to chat with yourself.
+   Open [http://localhost:8787](http://localhost:8787) in your browser. Open a **second window** on the same URL (or share it) to see live chat, typing, and “N online”.
 
 3. Run type checks and tests:
    ```bash
@@ -130,7 +136,7 @@ For AI agent and contributor conventions, see [AGENTS.md](AGENTS.md).
 
 ## Browser Extension (Page Chat)
 
-The optional extension lets people on the same page chat with each other. The current page's **hostname + path** becomes the chat room (e.g. `github.com/user/repo` — users on that repo page share one room, not everyone on `github.com`).
+The optional extension lets people on the same page chat with each other. The current page's **hostname + path** becomes the chat room (e.g. `github.com/user/repo` — users on that repo page share one room, not everyone on `github.com`). Click the floating 💬 to open the panel (see the GIF at the top of this README).
 
 ### Manual installation (GitHub Releases)
 
