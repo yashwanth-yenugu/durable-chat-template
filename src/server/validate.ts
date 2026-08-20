@@ -1,5 +1,5 @@
 import type { Message } from "../shared";
-import { MAX_MESSAGE_LENGTH } from "../shared";
+import { MAX_MESSAGE_LENGTH, MAX_USERNAME_LENGTH } from "../shared";
 
 const isNonEmptyString = (value: unknown, max: number): value is string =>
 	typeof value === "string" && value.length > 0 && value.length <= max;
@@ -19,7 +19,7 @@ export function validateInboundMessage(raw: unknown): Message | null {
 			if (
 				!isNonEmptyString(message.id, 64) ||
 				!isNonEmptyString(message.content, MAX_MESSAGE_LENGTH) ||
-				!isNonEmptyString(message.user, 64) ||
+				!isNonEmptyString(message.user, MAX_USERNAME_LENGTH) ||
 				(message.role !== "user" && message.role !== "assistant") ||
 				!isValidTimestamp(message.ts)
 			) {
@@ -30,7 +30,7 @@ export function validateInboundMessage(raw: unknown): Message | null {
 		case "delete":
 			if (
 				!isNonEmptyString(message.id, 64) ||
-				!isNonEmptyString(message.user, 64)
+				!isNonEmptyString(message.user, MAX_USERNAME_LENGTH)
 			) {
 				return null;
 			}
@@ -38,7 +38,7 @@ export function validateInboundMessage(raw: unknown): Message | null {
 
 		case "typing":
 		case "join":
-			if (!isNonEmptyString(message.user, 64)) return null;
+			if (!isNonEmptyString(message.user, MAX_USERNAME_LENGTH)) return null;
 			return message as unknown as Message;
 
 		default:

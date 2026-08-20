@@ -12,6 +12,7 @@ import { nanoid } from "nanoid";
 import {
 	CHAT_PARTY,
 	MAX_MESSAGE_LENGTH,
+	MAX_USERNAME_LENGTH,
 	type ChatMessage,
 	type Message,
 } from "../shared";
@@ -24,7 +25,7 @@ import {
 	typingLabel,
 	upsertChatMessage,
 } from "./utils";
-import { getOrCreateUsername } from "./username";
+import { getStoredUsername, isValidUsername, saveUsername } from "./username";
 
 export type ChatAppProps = {
 	room: string;
@@ -42,6 +43,9 @@ export function ChatApp({
 	embedded = false,
 }: ChatAppProps) {
 	const [name, setName] = useState("");
+	const [usernameDraft, setUsernameDraft] = useState("");
+	const [usernameError, setUsernameError] = useState("");
+	const [usernameLoaded, setUsernameLoaded] = useState(false);
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
 	const [typingUsers, setTypingUsers] = useState<string[]>([]);
 	const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
@@ -56,13 +60,34 @@ export function ChatApp({
 
 	useEffect(() => {
 		let cancelled = false;
-		getOrCreateUsername().then((username) => {
-			if (!cancelled) setName(username);
+		getStoredUsername().then((username) => {
+			if (cancelled) return;
+			if (username) setName(username);
+			setUsernameLoaded(true);
 		});
 		return () => {
 			cancelled = true;
 		};
 	}, []);
+
+	const submitUsername = async (event: React.FormEvent) => {
+		event.preventDefault();
+		if (!isValidUsername(usernameDraft)) {
+			setUsernameError("Enter a username between 1 and 64 characters.");
+			return;
+		}
+		try {
+			const username = await saveUsername(usernameDraft);
+			setUsernameError("");
+			setName(username);
+		} catch (error) {
+			setUsernameError(
+				error instanceof Error
+					? error.message
+					: "Enter a username between 1 and 64 characters.",
+			);
+		}
+	};
 
 	useEffect(() => {
 		inputRef.current?.focus();
@@ -160,6 +185,7 @@ export function ChatApp({
 
 	const displaySubtitle = subtitle ?? room;
 	const avatarLabel = displaySubtitle || room;
+	const needsUsername = usernameLoaded && !name;
 
 	return (
 		<div className={`chat-wrap${embedded ? " embedded" : ""}`}>
@@ -188,6 +214,45 @@ export function ChatApp({
 				)}
 			</header>
 
+			{needsUsername && (
+				<form className="username-gate" onSubmit={submitUsername}>
+					<div className="username-gate-title">Choose a username</div>
+					<div className="username-gate-sub">
+						This name is shown with your messages in this browser.
+					</div>
+					<input
+						value={usernameDraft}
+						onChange={(e) => {
+							setUsernameDraft(e.target.value);
+							if (usernameError) setUsernameError("");
+						}}
+						type="text"
+						name="username"
+						className="input"
+						placeholder="Your name"
+						maxLength={MAX_USERNAME_LENGTH}
+						autoComplete="username"
+						autoFocus
+						aria-label="Username"
+						aria-invalid={usernameError ? true : undefined}
+						aria-describedby={usernameError ? "username-error" : undefined}
+					/>
+					{usernameError && (
+						<div className="username-gate-error" id="username-error" role="alert">
+							{usernameError}
+						</div>
+					)}
+					<button
+						type="submit"
+						className={`btn ${isValidUsername(usernameDraft) ? "active" : "disabled"}`}
+						disabled={!isValidUsername(usernameDraft)}
+					>
+						Join chat
+					</button>
+				</form>
+			)}
+
+			{!needsUsername && (
 			<main
 				className="messages"
 				id="messages"
@@ -262,7 +327,9 @@ export function ChatApp({
 					</div>
 				)}
 			</main>
+			)}
 
+			{!needsUsername && (
 			<form
 				className="composer"
 				onSubmit={(e) => {
@@ -302,7 +369,13 @@ export function ChatApp({
 					type="text"
 					name="content"
 					className="input"
-					placeholder={name ? `Message as ${name}` : "Loading…"}
+					placeholder={
+						name
+							? `Message as ${name}`
+							: usernameLoaded
+								? "Choose a username to chat"
+								: "Loading…"
+					}
 					maxLength={MAX_MESSAGE_LENGTH}
 					autoComplete="off"
 					disabled={!name}
@@ -325,6 +398,7 @@ export function ChatApp({
 					</svg>
 				</button>
 			</form>
+			)}
 		</div>
 	);
 }

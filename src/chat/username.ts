@@ -1,26 +1,34 @@
-import { names } from "../shared";
+import { MAX_USERNAME_LENGTH } from "../shared";
 
 export const STORAGE_KEY = "chat-username";
 
-function secureRandom(): number {
-	const value = new Uint32Array(1);
-	crypto.getRandomValues(value);
-	return value[0]! * 2 ** -32;
+export function normaliseUsername(value: string): string {
+	return value.trim();
 }
 
-export function pickRandomName(random: () => number = secureRandom): string {
-	return names[Math.floor(random() * names.length)];
+export function isValidUsername(value: string): boolean {
+	const name = normaliseUsername(value);
+	return name.length > 0 && name.length <= MAX_USERNAME_LENGTH;
 }
 
-/** Load or create a persistent username (localStorage or extension storage). */
-export async function getOrCreateUsername(
+/** Load a previously chosen username (localStorage or extension storage). */
+export async function getStoredUsername(
 	storage: UsernameStorage = createDefaultStorage(),
-	random: () => number = secureRandom,
-): Promise<string> {
+): Promise<string | null> {
 	const stored = await storage.get(STORAGE_KEY);
-	if (stored) return stored;
+	if (!stored || !isValidUsername(stored)) return null;
+	return normaliseUsername(stored);
+}
 
-	const name = pickRandomName(random);
+/** Persist a user-provided username after validation. */
+export async function saveUsername(
+	value: string,
+	storage: UsernameStorage = createDefaultStorage(),
+): Promise<string> {
+	const name = normaliseUsername(value);
+	if (!isValidUsername(name)) {
+		throw new Error("Enter a username between 1 and 64 characters.");
+	}
 	await storage.set(STORAGE_KEY, name);
 	return name;
 }

@@ -16,7 +16,7 @@ A real-time multi-room chat application built on [Cloudflare Workers](https://de
 - **Typing indicators** — see when others are composing a message (debounced, auto-cleared)
 - **Online presence** — a live count of users currently in the room
 - **Message deletion** — users can delete their own messages; deletions are broadcast instantly
-- **Auto-generated usernames** — random names drawn from a curated list (Indian cricketers 🏏) stored in `localStorage`
+- **Chosen usernames** — first visit asks for a name; it is stored in `localStorage` (or extension storage) and reused
 - **Shareable rooms** — each room has a unique URL; visiting `/` redirects to a fresh room ID
 - **Page Chat extension** — optional browser extension that uses the current page URL (hostname + path) as the chat room, so visitors on the same page can chat with each other
 - **Automatic cleanup** — rooms with no activity for 30 days are deleted via a Durable Object alarm

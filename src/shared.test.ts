@@ -5,18 +5,17 @@ import {
 	MAX_MESSAGE_LENGTH,
 	MAX_MESSAGES,
 	MAX_ROOM_ID_LENGTH,
-	names,
+	MAX_USERNAME_LENGTH,
 	normalizeRoomId,
 } from "./shared";
 
 describe("shared constants", () => {
-	it("exports chat limits and username pool", () => {
+	it("exports chat limits", () => {
 		expect(MAX_MESSAGE_LENGTH).toBe(4000);
 		expect(MAX_MESSAGES).toBe(200);
 		expect(CHAT_PARTY).toBe("chat");
 		expect(MAX_ROOM_ID_LENGTH).toBe(200);
-		expect(names.length).toBeGreaterThan(10);
-		expect(names).toContain("Sachin");
+		expect(MAX_USERNAME_LENGTH).toBe(64);
 	});
 });
 
