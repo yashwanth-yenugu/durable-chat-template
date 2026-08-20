@@ -205,20 +205,46 @@ body, html {
 .username-gate {
 	flex: 1;
 	display: flex;
-	flex-direction: column;
-	align-items: stretch;
+	align-items: center;
 	justify-content: center;
-	gap: 12px;
-	padding: 32px 24px;
-	max-width: 360px;
-	margin: 0 auto;
-	width: 100%;
+	padding: 24px 16px;
+	background: var(--bg);
+	min-height: 0;
+}
+.username-card {
+	width: min(420px, 100%);
+	flex: none;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 22px 20px 18px;
+	background: var(--surface);
+	border-radius: 16px;
+	box-shadow: 0 10px 40px rgba(11, 18, 32, 0.08);
 	box-sizing: border-box;
 }
-.username-gate-title { font-size: 1.15rem; font-weight: 700; color: #202c33; text-align: center; }
-.username-gate-sub { font-size: 0.88rem; color: var(--muted); text-align: center; margin-bottom: 4px; }
-.username-gate-error { font-size: 0.82rem; color: #c53030; text-align: center; }
-.username-gate .btn { width: 100%; }
+.username-gate-title { font-size: 1.15rem; font-weight: 700; color: #202c33; }
+.username-gate-sub { font-size: 0.88rem; color: var(--muted); line-height: 1.35; }
+.username-gate-error { font-size: 0.82rem; color: #c53030; }
+.username-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 8px;
+	margin-top: 8px;
+}
+.username-row .input {
+	flex: 1 1 auto;
+	min-width: 0;
+	height: 38px;
+	max-height: 38px;
+}
+.username-row .btn {
+	width: auto;
+	flex: 0 0 auto;
+	padding: 0 16px;
+	white-space: nowrap;
+}
 
 @media (max-width:620px) {
 	.avatar{ width:28px; height:28px; }

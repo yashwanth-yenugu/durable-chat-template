@@ -215,41 +215,45 @@ export function ChatApp({
 			</header>
 
 			{needsUsername && (
-				<form className="username-gate" onSubmit={submitUsername}>
-					<div className="username-gate-title">Choose a username</div>
-					<div className="username-gate-sub">
-						This name is shown with your messages in this browser.
-					</div>
-					<input
-						value={usernameDraft}
-						onChange={(e) => {
-							setUsernameDraft(e.target.value);
-							if (usernameError) setUsernameError("");
-						}}
-						type="text"
-						name="username"
-						className="input"
-						placeholder="Your name"
-						maxLength={MAX_USERNAME_LENGTH}
-						autoComplete="username"
-						autoFocus
-						aria-label="Username"
-						aria-invalid={usernameError ? true : undefined}
-						aria-describedby={usernameError ? "username-error" : undefined}
-					/>
-					{usernameError && (
-						<div className="username-gate-error" id="username-error" role="alert">
-							{usernameError}
+				<div className="username-gate">
+					<form className="username-card" onSubmit={submitUsername}>
+						<div className="username-gate-title">Choose a username</div>
+						<div className="username-gate-sub">
+							This name is shown with your messages in this browser.
 						</div>
-					)}
-					<button
-						type="submit"
-						className={`btn ${isValidUsername(usernameDraft) ? "active" : "disabled"}`}
-						disabled={!isValidUsername(usernameDraft)}
-					>
-						Join chat
-					</button>
-				</form>
+						<div className="username-row">
+							<input
+								value={usernameDraft}
+								onChange={(e) => {
+									setUsernameDraft(e.target.value);
+									if (usernameError) setUsernameError("");
+								}}
+								type="text"
+								name="username"
+								className="input"
+								placeholder="Your name"
+								maxLength={MAX_USERNAME_LENGTH}
+								autoComplete="username"
+								autoFocus
+								aria-label="Username"
+								aria-invalid={usernameError ? true : undefined}
+								aria-describedby={usernameError ? "username-error" : undefined}
+							/>
+							<button
+								type="submit"
+								className={`btn ${isValidUsername(usernameDraft) ? "active" : "disabled"}`}
+								disabled={!isValidUsername(usernameDraft)}
+							>
+								Join chat
+							</button>
+						</div>
+						{usernameError && (
+							<div className="username-gate-error" id="username-error" role="alert">
+								{usernameError}
+							</div>
+						)}
+					</form>
+				</div>
 			)}
 
 			{!needsUsername && (
