@@ -1,24 +1,28 @@
 ---
 name: verify-chat-ui
-description: Manually verify shareable-link chat and the Page Chat browser extension with computerUse (two Chrome profiles, live messages, 💬 overlay). Use after any big UI, chat, WebSocket, username, or extension change; before claiming the product works; when the user asks to verify, smoke-test, demo, or record GIFs of chat/extension; and when updating README screenshots.
-paths: src/chat/**, src/client/**, src/extension/**, extension/**, public/**
+description: Manually verify shareable-link chat and the Page Chat browser extension with computerUse (two Chrome profiles, live messages, 💬 overlay). Use after implementing any new feature — not only UI changes — and after protocol, server, username, or extension work; before claiming a feature is done; when the user asks to verify, smoke-test, demo, or record GIFs; and when updating README screenshots.
 ---
 
 # Verify chat + Page Chat (computerUse)
 
 After any big changes or when asked you should use computeruse and verify both chat mode using link and extension mode by installing the extension and verifying everything is working as expected.
 
-Automated tests are not a substitute. Do not claim the web app or extension works until both modes below pass in a real browser.
+Not only after ui changes, we should verify it after implementing any new feature.
+
+Automated tests are not a substitute. Do not claim a new feature works until both modes below pass in a real browser.
 
 ## When this applies
 
 Run the full checklist when any of these is true:
 
+- You implemented a **new feature** (any layer: UI, server, protocol, extension, storage, presence, etc.)
 - Chat UI, composer, username gate, presence, typing, or message layout changed
 - Extension content script, panel, room id, or build changed
 - WebSocket / Durable Object protocol or join flow changed
 - User asked to verify, smoke-test, demo, or capture README GIFs
 - You are about to say the feature is done
+
+Skip only for pure docs/comments/skill-text with no product behavior change.
 
 If computerUse is unavailable, say so and still run `bun run check`. Do not invent screenshots.
 
