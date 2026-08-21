@@ -202,6 +202,55 @@ body, html {
 .empty-title { font-size: 1.05rem; font-weight: 600; color: #4a5568; }
 .empty-sub   { font-size: 0.88rem; }
 
+.username-gate {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 24px 16px;
+	background: var(--bg);
+	min-height: 0;
+}
+.username-card {
+	width: 480px;
+	max-width: calc(100% - 32px);
+	min-width: 0;
+	flex: 0 0 auto;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 28px 24px 22px;
+	background: var(--surface);
+	border-radius: 16px;
+	box-shadow: 0 10px 40px rgba(11, 18, 32, 0.08);
+	box-sizing: border-box;
+}
+.username-gate-title { font-size: 1.2rem; font-weight: 700; color: #202c33; letter-spacing: -0.01em; }
+.username-gate-sub { font-size: 0.88rem; color: var(--muted); line-height: 1.4; }
+.username-gate-error { font-size: 0.82rem; color: #c53030; }
+.username-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 10px;
+	margin-top: 10px;
+}
+.username-row .input {
+	flex: 1 1 auto;
+	min-width: 0;
+	width: auto;
+	height: 40px;
+	max-height: 40px;
+}
+.username-row .btn {
+	width: auto;
+	flex: 0 0 auto;
+	height: 40px;
+	padding: 0 18px;
+	white-space: nowrap;
+}
+
 @media (max-width:620px) {
 	.avatar{ width:28px; height:28px; }
 	.input{ height:36px }

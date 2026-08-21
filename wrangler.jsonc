@@ -37,5 +37,8 @@
 			"head_sampling_rate": 1
 		}
 	},
+	"placement": {
+		"mode": "smart"
+	},
 	"upload_source_maps": false
 }

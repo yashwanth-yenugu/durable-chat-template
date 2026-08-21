@@ -10,6 +10,9 @@ export type ChatMessage = {
 /** Maximum number of characters allowed in a single message */
 export const MAX_MESSAGE_LENGTH = 4000;
 
+/** Maximum number of characters allowed in a username */
+export const MAX_USERNAME_LENGTH = 64;
+
 /** Maximum number of messages stored per room */
 export const MAX_MESSAGES = 200;
 
@@ -52,14 +55,3 @@ export type Message =
 	| { type: "join"; user: string }
 	| { type: "presence"; users: string[] }
 	| { type: "all"; messages: ChatMessage[] };
-
-export const names = [
-	// Women cricketers
-	"Harmanpreet", "Smriti", "Jhulan", "Mithali", "Deepti",
-	"Poonam", "Shafali", "Rajeshwari", "Sneh", "Shikha",
-	"Punam", "Taniya", "Richa", "Jemimah", "Radha",
-	// Men cricketers
-	"Kapil", "Sachin", "Dhoni", "Yuvraj", "Virender",
-	"Gautam", "Zaheer", "Harbhajan", "Virat", "Suresh",
-	"Munaf", "Ashish", "Sreesanth", "Rohit", "Ravindra"
-];

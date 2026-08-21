@@ -3,11 +3,19 @@
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/durable-chat-template)
 [![GitHub Release](https://img.shields.io/github/v/release/yashwanth-yenugu/durable-chat-template)](https://github.com/yashwanth-yenugu/durable-chat-template/releases)
 
-![Template Preview](https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/da00d330-9a3b-40a2-e6df-b08813fb7200/public)
+Share a room URL and talk live — two browsers, same link, messages appear instantly:
+
+![Maya and Jordan chatting in the same room](docs/screenshots/multi-user-chat.gif)
+
+Or install **Page Chat** and talk to whoever is on the same webpage. The 💬 button opens a panel; the room is that page’s hostname + path:
+
+![Page Chat on example.com — same page, same room](docs/screenshots/page-chat-extension.gif)
+
+Try the [live demo](https://asyncawait.fun), or run `bun run dev` and open the same URL in two windows.
 
 <!-- dash-content-start -->
 
-A real-time multi-room chat application built on [Cloudflare Workers](https://developers.cloudflare.com/workers/) and [Durable Objects](https://developers.cloudflare.com/durable-objects/), using [PartyKit](https://www.partykit.io/) for WebSocket connection management. Visit the [live demo](https://asyncawait.fun) — you are dropped into a unique room and can invite others by sharing the URL.
+A real-time multi-room chat application built on [Cloudflare Workers](https://developers.cloudflare.com/workers/) and [Durable Objects](https://developers.cloudflare.com/durable-objects/), using [PartyKit](https://www.partykit.io/) for WebSocket connection management.
 
 ## Features
 
@@ -16,7 +24,8 @@ A real-time multi-room chat application built on [Cloudflare Workers](https://de
 - **Typing indicators** — see when others are composing a message (debounced, auto-cleared)
 - **Online presence** — a live count of users currently in the room
 - **Message deletion** — users can delete their own messages; deletions are broadcast instantly
-- **Auto-generated usernames** — random names drawn from a curated list (Indian cricketers 🏏) stored in `localStorage`
+- **Chosen usernames** — first visit asks for a name; it is stored in `localStorage` (or extension storage) and reused
+- **Smart Placement** — the Worker uses [Cloudflare Smart Placement](https://developers.cloudflare.com/workers/configuration/placement/) so it can run closer to backends when that reduces latency
 - **Shareable rooms** — each room has a unique URL; visiting `/` redirects to a fresh room ID
 - **Page Chat extension** — optional browser extension that uses the current page URL (hostname + path) as the chat room, so visitors on the same page can chat with each other
 - **Automatic cleanup** — rooms with no activity for 30 days are deleted via a Durable Object alarm
@@ -78,6 +87,8 @@ durable-chat-template/
 │   │   ├── panel.tsx       # Extension iframe chat panel
 │   │   └── config.ts       # Backend host for extension WebSocket
 │   └── shared.ts           # Shared types (Message, ChatMessage) and constants
+├── docs/
+│   └── screenshots/        # README GIFs: multi-user room + Page Chat extension
 ├── extension/
 │   ├── manifest.json       # Browser extension manifest
 │   └── dist/               # esbuild output (auto-generated, not committed)
@@ -115,7 +126,7 @@ For AI agent and contributor conventions, see [AGENTS.md](AGENTS.md).
    ```bash
    bun run dev
    ```
-   Open [http://localhost:8787](http://localhost:8787) in your browser. Open a second tab with the same URL to chat with yourself.
+   Open [http://localhost:8787](http://localhost:8787) in your browser. Open a **second window** on the same URL (or share it) to see live chat, typing, and “N online”.
 
 3. Run type checks and tests:
    ```bash
@@ -125,7 +136,7 @@ For AI agent and contributor conventions, see [AGENTS.md](AGENTS.md).
 
 ## Browser Extension (Page Chat)
 
-The optional extension lets people on the same page chat with each other. The current page's **hostname + path** becomes the chat room (e.g. `github.com/user/repo` — users on that repo page share one room, not everyone on `github.com`).
+The optional extension lets people on the same page chat with each other. The current page's **hostname + path** becomes the chat room (e.g. `github.com/user/repo` — users on that repo page share one room, not everyone on `github.com`). Click the floating 💬 to open the panel (see the GIF at the top of this README).
 
 ### Manual installation (GitHub Releases)
 
@@ -199,5 +210,6 @@ Key settings in `wrangler.jsonc`:
 | `assets.directory` | `./public` | Static files served via Workers Assets |
 | `build.command` | esbuild … | Client bundle built before each deploy |
 | `observability` | logs + traces | Workers Logs and tracing enabled |
+| `placement.mode` | `smart` | [Smart Placement](https://developers.cloudflare.com/workers/configuration/placement/) — after deploy, Cloudflare may run the Worker closer to backends when that is faster |
 
 The `Chat` Durable Object is declared in `exports` with `"storage": "sqlite"`. Existing Workers that previously used the `v1` `new_sqlite_classes` migration can switch to `exports` without a data migration.

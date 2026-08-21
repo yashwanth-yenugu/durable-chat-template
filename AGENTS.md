@@ -40,6 +40,7 @@ Extension backend host is set at build time: `CHAT_HOST=your-worker.workers.dev 
 - **Room ids** — web app uses random URL slugs; extension uses `roomIdFromLocation()` (hostname + path); long ids use `normalizeRoomId()` in `src/shared.ts`
 - **Do not edit generated output** — `public/dist/`, `extension/dist/`, `coverage/`, `src/server/worker-configuration.d.ts` (use `cf-typegen`)
 - **Tests** — add/update Vitest tests for logic changes; run `bun run check` before claiming done
+- **Manual UI** — after implementing any new feature (not only UI changes), run `.cursor/skills/verify-chat-ui/SKILL.md` (link chat + installed extension, computerUse)
 - **Branches** — use `cursor/<descriptive-name>-6eb8` for agent work
 
 ## Key reference files
@@ -58,6 +59,7 @@ WebSocket JSON messages use the `Message` discriminated union: `join`, `add`, `u
 
 - **Install:** `bun install --frozen-lockfile` (see `.cursor/environment.json`)
 - **Verify before PR:** `bun run check`
+- **Manual product check:** after implementing any new feature (not only UI changes), follow `.cursor/skills/verify-chat-ui/SKILL.md` (computerUse: shareable-link room **and** installed Page Chat overlay)
 - **Dev server:** `bun run dev` (port 8787)
 - **Extension smoke test:** `bun run build:extension`, load unpacked from `extension/` in Chrome
 - **Extension GitHub Releases:** tag `v*` or run `.github/workflows/release-extension.yml`; testers download `page-chat-chrome.zip` from Assets, extract, and Load unpacked

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { MAX_MESSAGE_LENGTH } from "../shared";
+import { MAX_MESSAGE_LENGTH, MAX_USERNAME_LENGTH } from "../shared";
 import {
 	isAuthorisedUser,
 	serialiseHistory,
@@ -50,6 +50,12 @@ describe("validateInboundMessage", () => {
 			}),
 		).toBeNull();
 		expect(validateInboundMessage({ type: "join", user: "" })).toBeNull();
+		expect(
+			validateInboundMessage({
+				type: "join",
+				user: "x".repeat(MAX_USERNAME_LENGTH + 1),
+			}),
+		).toBeNull();
 		expect(
 			validateInboundMessage({
 				type: "add",
