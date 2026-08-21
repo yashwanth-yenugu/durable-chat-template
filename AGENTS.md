@@ -1,6 +1,6 @@
 # Agent instructions
 
-Real-time chat on Cloudflare Workers + Durable Objects, with a React web app and optional **Page Chat** browser extension (room = page hostname + path).
+Real-time chat on Cloudflare Workers + Durable Objects, with a React web app and optional **Roomgist** browser extension (room = page hostname + path).
 
 ## Monorepo layout
 
@@ -62,7 +62,7 @@ WebSocket JSON messages use the `Message` discriminated union: `join`, `add`, `u
 - **Manual product check:** after implementing any new feature (not only UI changes), follow `.cursor/skills/verify-chat-ui/SKILL.md` (computerUse: shareable-link room **and** installed Page Chat overlay)
 - **Dev server:** `bun run dev` (port 8787)
 - **Extension smoke test:** `bun run build:extension`, load unpacked from `extension/` in Chrome
-- **Extension GitHub Releases:** tag `v*` or run `.github/workflows/release-extension.yml`; testers download `page-chat-chrome.zip` from Assets, extract, and Load unpacked
+- **Extension GitHub Releases:** tag `v*` or run `.github/workflows/release-extension.yml`; testers download `roomgist-chrome.zip` from Assets, extract, and Load unpacked
 - **Deploy:** `bun run deploy`; privacy policy at `/privacy.html`
 - **Worker Builds:** if CI fails on build token, update **Settings → Builds → API token** in the Cloudflare dashboard (not a code fix)
 - **Secrets:** never commit `.env` / `.dev.vars`; use Cloudflare dashboard or Cursor Cloud secrets

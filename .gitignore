@@ -200,8 +200,8 @@ dist
 
 ### Extension store build ###
 extension-release/
-page-chat-extension.zip
-page-chat-extension-*.zip
-page-chat-chrome.zip
+roomgist-extension.zip
+roomgist-extension-*.zip
+roomgist-chrome.zip
 package-lock.json
 public/dist/

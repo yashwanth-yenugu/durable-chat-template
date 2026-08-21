@@ -46,7 +46,7 @@ export function loadUnpackedInstructions(options: {
 	version: string;
 }): string {
 	const { chatHost, version } = options;
-	return `Page Chat ${version} — try in Chrome (developer mode)
+	return `Roomgist ${version} — try in Chrome (developer mode)
 =====================================================
 
 This folder is a ready-to-load Manifest V3 extension. Chrome cannot load

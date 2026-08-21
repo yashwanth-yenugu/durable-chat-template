@@ -49,9 +49,9 @@ describe("ChatApp", () => {
 	});
 
 	it("renders the room subtitle and sends join on load", async () => {
-		render(<ChatApp room="github.com/user/repo" title="Page Chat" />);
+		render(<ChatApp room="github.com/user/repo" title="Roomgist" />);
 
-		expect(await screen.findByText("Page Chat")).toBeTruthy();
+		expect(await screen.findByText("Roomgist")).toBeTruthy();
 		expect(screen.getByText("github.com/user/repo")).toBeTruthy();
 		await waitFor(() =>
 			expect(socket.send).toHaveBeenCalledWith(

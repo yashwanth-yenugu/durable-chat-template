@@ -1,10 +1,10 @@
 ---
-description: Chrome MV3 Page Chat extension — content script, iframe panel, builds
+description: Chrome MV3 Roomgist extension — content script, iframe panel, builds
 globs: src/extension/**, extension/**, scripts/build-extension*.mjs
 alwaysApply: false
 ---
 
-# Browser extension (Page Chat)
+# Browser extension (Roomgist)
 
 - Manifest: @extension/manifest.json (MV3). Load unpacked from `extension/` after build.
 - Source: @src/extension/content.ts injects toggle + iframe; @src/extension/panel.tsx renders `ChatApp`.
@@ -12,7 +12,7 @@ alwaysApply: false
 - Helpers: @src/extension/contentHelpers.ts — injectable page check, panel URL, SPA history wrapping.
 - Backend host baked at build: `CHAT_HOST` env → `__CHAT_HOST__` in @src/extension/config.ts via esbuild `--define`.
 - Builds: `bun run build:extension` (dev, may include localhost); `bun run build:extension:store` (store / GitHub Release ZIP).
-- Sideload testers: GitHub Releases → Assets → `page-chat-chrome.zip` → extract → Load unpacked. Workflow: `.github/workflows/release-extension.yml`.
+- Sideload testers: GitHub Releases → Assets → `roomgist-chrome.zip` → extract → Load unpacked. Workflow: `.github/workflows/release-extension.yml`.
 - Iframe uses extension origin to avoid page CSP issues on WebSockets.
 - Store publishing checklist: @extension/STORE.md.
 - Tests: @src/extension/roomId.test.ts, @src/extension/contentHelpers.test.ts.

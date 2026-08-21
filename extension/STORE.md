@@ -1,12 +1,12 @@
-# Publishing Page Chat to the Chrome Web Store
+# Publishing Roomgist to the Chrome Web Store
 
 ## GitHub Releases (sideload testers)
 
-The same store ZIP is attached to [GitHub Releases](https://github.com/yashwanth-yenugu/durable-chat-template/releases) so people can try the extension in Chrome **Developer mode** without cloning the repo.
+The same store ZIP is attached to [GitHub Releases](https://github.com/yashwanth-yenugu/roomgist/releases) so people can try the extension in Chrome **Developer mode** without cloning the repo.
 
 1. Push a version tag: `git tag v1.0.1 && git push origin v1.0.1`
-2. Or run **Actions → Release Page Chat extension** (creates a pre-release tagged `extension-<run>`)
-3. Testers open the release **Assets**, download `page-chat-chrome.zip`, extract it, then **Load unpacked** on that folder
+2. Or run **Actions → Release Roomgist extension** (creates a pre-release tagged `extension-<run>`)
+3. Testers open the release **Assets**, download `roomgist-chrome.zip`, extract it, then **Load unpacked** on that folder
 
 Chrome cannot load the `.zip` file itself. Sideload instructions are also in `LOAD_UNPACKED.txt` inside the ZIP.
 
@@ -36,7 +36,7 @@ This creates:
 
 | Output | Purpose |
 |--------|---------|
-| `page-chat-extension.zip` | Upload this to the Chrome Web Store |
+| `roomgist-extension.zip` | Upload this to the Chrome Web Store |
 | `extension-release/` | Unpacked copy for local verification |
 | `extension-release/STORE_UPLOAD.txt` | Host + privacy URL reminder |
 
@@ -62,14 +62,14 @@ The store build:
 ## 4. Upload
 
 1. Click **New item**
-2. Upload `page-chat-extension.zip`
+2. Upload `roomgist-extension.zip`
 3. Fix any validation errors
 
 ## 5. Store listing
 
 Fill in:
 
-- **Name:** Page Chat
+- **Name:** Roomgist
 - **Summary:** Chat in real time with others on the same page.
 - **Description:** Explain hostname + path rooms (e.g. `github.com/user/repo`)
 - **Category:** Social & Communication

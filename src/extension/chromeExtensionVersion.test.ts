@@ -41,7 +41,7 @@ describe("loadUnpackedInstructions", () => {
 			chatHost: "asyncawait.fun",
 			version: "1.2.3",
 		});
-		expect(text).toContain("Page Chat 1.2.3");
+		expect(text).toContain("Roomgist 1.2.3");
 		expect(text).toContain("chrome://extensions");
 		expect(text).toContain("Developer mode");
 		expect(text).toContain("Load unpacked");

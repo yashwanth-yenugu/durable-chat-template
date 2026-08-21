@@ -1,10 +1,10 @@
 {
-	"name": "durable-chat-template",
-	"description": "Chat with other users in real-time using Durable Objects and PartyKit.",
+	"name": "roomgist",
+	"description": "Roomgist — real-time chat in shareable rooms and on the page you're viewing.",
 	"private": true,
 	"packageManager": "bun@1.3.14",
 	"cloudflare": {
-		"label": "Durable Chat App",
+		"label": "Roomgist",
 		"products": [
 			"Workers",
 			"Durable Objects"

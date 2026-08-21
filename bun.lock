@@ -3,7 +3,7 @@
   "configVersion": 0,
   "workspaces": {
     "": {
-      "name": "durable-chat-template",
+      "name": "roomgist",
       "dependencies": {
         "nanoid": "5.1.6",
         "partyserver": "0.1.0",

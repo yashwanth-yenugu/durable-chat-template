@@ -13,7 +13,7 @@ function RoomChat() {
 	return (
 		<ChatApp
 			room={room}
-			title="Chat"
+			title="Roomgist"
 			subtitle={room}
 		/>
 	);

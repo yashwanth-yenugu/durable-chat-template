@@ -1,6 +1,6 @@
 {
 	"manifest_version": 3,
-	"name": "Page Chat",
+	"name": "Roomgist",
 	"version": "1.0.0",
 	"description": "Chat with others on the same page. Each hostname + path is its own chat room.",
 	"permissions": ["storage"],
@@ -29,7 +29,7 @@
 		}
 	],
 	"action": {
-		"default_title": "Page Chat",
+		"default_title": "Roomgist",
 		"default_icon": {
 			"16": "icons/icon16.png",
 			"48": "icons/icon48.png",

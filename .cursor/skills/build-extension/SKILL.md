@@ -1,6 +1,6 @@
 ---
 name: build-extension
-description: Build and verify the Page Chat browser extension. Use when changing extension source, manifest, icons, or build scripts.
+description: Build and verify the Roomgist browser extension. Use when changing extension source, manifest, icons, or build scripts.
 paths: src/extension/**, extension/**, scripts/build-extension*.mjs
 ---
 
@@ -23,13 +23,13 @@ Outputs to `extension/dist/`. Load unpacked from `extension/` in `chrome://exten
 CHAT_HOST=your-worker.workers.dev bun run build:extension:store
 ```
 
-Upload `page-chat-extension.zip`. See `extension/STORE.md` for the full checklist.
+Upload `roomgist-extension.zip`. See `extension/STORE.md` for the full checklist.
 
 ## GitHub Releases (sideload, no local clone)
 
 CI (`.github/workflows/release-extension.yml`) builds the store ZIP and attaches it to a GitHub Release on `v*` tags or `workflow_dispatch`.
 
-Testers: Releases → Assets → `page-chat-chrome.zip` → extract → Load unpacked (Chrome cannot load a zip file itself).
+Testers: Releases → Assets → `roomgist-chrome.zip` → extract → Load unpacked (Chrome cannot load a zip file itself).
 
 Optional: `EXTENSION_VERSION=v1.2.3 bun run build:extension:store` (Chrome `manifest.version` must be 1–4 numeric parts).
 
