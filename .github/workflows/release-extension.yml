@@ -1,4 +1,4 @@
-name: Release Page Chat extension
+name: Release Roomgist extension
 
 on:
   push:
@@ -82,10 +82,10 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="$(python3 -c 'import json; print(json.load(open("extension-release/manifest.json"))["version"])')"
-          # Stable filename (WebChat pattern: web-chat-chrome.zip) so testers
-          # always pick the same Assets entry. Version lives in manifest.json.
-          STABLE="page-chat-chrome.zip"
-          cp page-chat-extension.zip "$STABLE"
+          # Stable filename so testers always pick the same Assets entry.
+          # Version lives in manifest.json.
+          STABLE="roomgist-chrome.zip"
+          cp roomgist-extension.zip "$STABLE"
           unzip -l "$STABLE" | grep -q ' manifest.json$'
           echo "name=$STABLE" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
@@ -103,15 +103,15 @@ jobs:
           set -euo pipefail
           if [ "$REF_TYPE" = "tag" ]; then
             TAG="$REF_NAME"
-            TITLE="Page Chat extension ${TAG}"
+            TITLE="Roomgist extension ${TAG}"
             PRERELEASE=0
           else
             TAG="extension-${RUN_NUMBER}"
-            TITLE="Page Chat extension ${VERSION} (sideload)"
+            TITLE="Roomgist extension ${VERSION} (sideload)"
             PRERELEASE=1
           fi
           cat > /tmp/extension-release-notes.md <<EOF
-          Download **page-chat-chrome.zip** from Assets, extract it, then Load unpacked in Chrome.
+          Download **roomgist-chrome.zip** from Assets, extract it, then Load unpacked in Chrome.
 
           Chrome cannot load a \`.zip\` as an unpacked extension.
 

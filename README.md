@@ -1,7 +1,7 @@
-# Durable Chat App
+# Roomgist
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/durable-chat-template)
-[![GitHub Release](https://img.shields.io/github/v/release/yashwanth-yenugu/durable-chat-template)](https://github.com/yashwanth-yenugu/durable-chat-template/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/yashwanth-yenugu/roomgist)](https://github.com/yashwanth-yenugu/roomgist/releases)
 
 ![Template Preview](https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/da00d330-9a3b-40a2-e6df-b08813fb7200/public)
 
@@ -18,7 +18,7 @@ A real-time multi-room chat application built on [Cloudflare Workers](https://de
 - **Message deletion** — users can delete their own messages; deletions are broadcast instantly
 - **Auto-generated usernames** — random names drawn from a curated list (Indian cricketers 🏏) stored in `localStorage`
 - **Shareable rooms** — each room has a unique URL; visiting `/` redirects to a fresh room ID
-- **Page Chat extension** — optional browser extension that uses the current page URL (hostname + path) as the chat room, so visitors on the same page can chat with each other
+- **Roomgist extension** — optional browser extension that uses the current page URL (hostname + path) as the chat room, so visitors on the same page can chat with each other
 - **Automatic cleanup** — rooms with no activity for 30 days are deleted via a Durable Object alarm
 
 ## How It Works
@@ -63,7 +63,7 @@ All WebSocket frames carry JSON matching the `Message` discriminated union:
 ## Project Structure
 
 ```
-durable-chat-template/
+roomgist/
 ├── src/
 │   ├── chat/
 │   │   ├── ChatApp.tsx     # Shared React chat UI (web app + extension)
@@ -123,7 +123,7 @@ For AI agent and contributor conventions, see [AGENTS.md](AGENTS.md).
    ```
    This runs `tsc` for the client, server, and extension, unit tests with 80%+ coverage (`bun run test:coverage`), and a Wrangler dry-run deploy.
 
-## Browser Extension (Page Chat)
+## Browser Extension (Roomgist)
 
 The optional extension lets people on the same page chat with each other. The current page's **hostname + path** becomes the chat room (e.g. `github.com/user/repo` — users on that repo page share one room, not everyone on `github.com`).
 
@@ -131,8 +131,8 @@ The optional extension lets people on the same page chat with each other. The cu
 
 Same sideload path as other Chrome extensions: download the ZIP from Releases, extract it, then Load unpacked. You do not need to clone the repo or run a build.
 
-1. Go to [Releases](https://github.com/yashwanth-yenugu/durable-chat-template/releases)
-2. Under **Assets**, download `page-chat-chrome.zip`
+1. Go to [Releases](https://github.com/yashwanth-yenugu/roomgist/releases)
+2. Under **Assets**, download `roomgist-chrome.zip`
 3. Extract the ZIP to a folder on your computer
 4. Open `chrome://extensions`
    - Enable **Developer mode**
@@ -141,7 +141,7 @@ Same sideload path as other Chrome extensions: download the ZIP from Releases, e
 
 Release builds connect to `asyncawait.fun`. Chrome cannot load the `.zip` file itself.
 
-Maintainers: push a `v*` tag (`git tag v1.0.1 && git push origin v1.0.1`) or run **Actions → Release Page Chat extension**. Tagged releases show as latest; manual workflow runs are pre-releases.
+Maintainers: push a `v*` tag (`git tag v1.0.1 && git push origin v1.0.1`) or run **Actions → Release Roomgist extension**. Tagged releases show as latest; manual workflow runs are pre-releases.
 
 ### Build from source
 
@@ -168,7 +168,7 @@ bun run build:extension:store
 # Or: CHAT_HOST=your-worker.workers.dev bun run build:extension:store
 ```
 
-Upload `page-chat-extension.zip` to the [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole). See [extension/STORE.md](extension/STORE.md) for the full checklist. The privacy policy is served at `/privacy.html` on your deployed Worker.
+Upload `roomgist-extension.zip` to the [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole). See [extension/STORE.md](extension/STORE.md) for the full checklist. The privacy policy is served at `/privacy.html` on your deployed Worker.
 
 The standalone web app and extension share the same `ChatApp` component and backend — only the room ID source differs (random URL slug vs. page hostname + path).
 

@@ -20,7 +20,7 @@ const privacyUrl =
 	process.env.PRIVACY_URL ?? `https://${chatHost}/privacy.html`;
 const version = chromeExtensionVersion(process.env.EXTENSION_VERSION);
 const outDir = join(root, "extension-release");
-const zipPath = join(root, "page-chat-extension.zip");
+const zipPath = join(root, "roomgist-extension.zip");
 const define = `--define:__CHAT_HOST__=${JSON.stringify(chatHost)}`;
 
 function runEsbuild(args) {
@@ -62,7 +62,7 @@ cpSync(join(root, "extension/icons"), join(outDir, "icons"), { recursive: true }
 
 const manifest = {
 	manifest_version: 3,
-	name: "Page Chat",
+	name: "Roomgist",
 	version,
 	description:
 		"Chat with others on the same page. Each hostname + path is its own chat room.",
@@ -88,7 +88,7 @@ const manifest = {
 		},
 	],
 	action: {
-		default_title: "Page Chat",
+		default_title: "Roomgist",
 		default_icon: {
 			16: "icons/icon16.png",
 			48: "icons/icon48.png",
@@ -108,7 +108,7 @@ writeFileSync(
 );
 
 execSync(
-	`zip -r ../page-chat-extension.zip manifest.json dist icons LOAD_UNPACKED.txt`,
+	`zip -r ../roomgist-extension.zip manifest.json dist icons LOAD_UNPACKED.txt`,
 	{
 		cwd: outDir,
 		stdio: "inherit",
@@ -117,15 +117,15 @@ execSync(
 
 writeFileSync(
 	join(outDir, "STORE_UPLOAD.txt"),
-	`Page Chat — Chrome Web Store upload package
+	`Roomgist — Chrome Web Store upload package
 ============================================
 
-ZIP file: ${join(root, "page-chat-extension.zip")}
+ZIP file: ${join(root, "roomgist-extension.zip")}
 Version: ${version}
 Backend host: ${chatHost}
 Privacy policy URL (use in store listing): ${privacyUrl}
 
-Upload page-chat-extension.zip at:
+Upload roomgist-extension.zip at:
 https://chrome.google.com/webstore/devconsole
 
 See extension/STORE.md for the full publishing checklist.
@@ -133,6 +133,6 @@ See extension/STORE.md for the full publishing checklist.
 );
 
 console.log("\nStore package ready:");
-console.log(`  ZIP: ${join(root, "page-chat-extension.zip")}`);
+console.log(`  ZIP: ${join(root, "roomgist-extension.zip")}`);
 console.log(`  Version: ${version}`);
 console.log(`  Privacy policy URL: ${privacyUrl}`);

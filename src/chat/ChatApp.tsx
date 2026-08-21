@@ -37,7 +37,7 @@ export type ChatAppProps = {
 export function ChatApp({
 	room,
 	host,
-	title = "Chat",
+	title = "Roomgist",
 	subtitle,
 	embedded = false,
 }: ChatAppProps) {

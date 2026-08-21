@@ -15,7 +15,7 @@ createRoot(document.getElementById("root")!).render(
 		<ChatApp
 			room={room}
 			host={host}
-			title="Page Chat"
+			title="Roomgist"
 			subtitle={room}
 			embedded
 		/>
